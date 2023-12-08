@@ -5,6 +5,8 @@ import com.smarty.domain.student.model.StudentRequestDTO;
 import com.smarty.domain.student.model.StudentResponseDTO;
 import com.smarty.domain.student.model.StudentUpdateDTO;
 import com.smarty.domain.student.repository.StudentRepository;
+import com.smarty.infrastructure.exception.exceptions.ConflictException;
+import com.smarty.infrastructure.exception.exceptions.NotFoundException;
 import com.smarty.infrastructure.mapper.StudentMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,9 +31,16 @@ public class StudentServiceImpl implements StudentService {
     public StudentResponseDTO createStudent(StudentRequestDTO studentRequestDTO) {
         Student student = studentMapper.toStudent(studentRequestDTO);
 
+        validateIndex(studentRequestDTO.index());
         studentRepository.save(student);
 
         return studentMapper.toStudentResponseDTO(student);
+    }
+
+    private void validateIndex(int index) {
+        if (studentRepository.existsByIndex(index)) {
+            throw new ConflictException("Student with index %d already exists".formatted(index));
+        }
     }
 
     @Override
@@ -48,7 +57,7 @@ public class StudentServiceImpl implements StudentService {
         Optional<Student> optionalStudent = studentRepository.findById(id);
 
         if (optionalStudent.isEmpty()) {
-            throw new RuntimeException(STUDENT_NOT_EXISTS.formatted(id));
+            throw new NotFoundException(STUDENT_NOT_EXISTS.formatted(id));
         }
 
         return optionalStudent.get();
@@ -67,7 +76,7 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public void deleteStudent(Long id) {
         if (!studentRepository.existsById(id)) {
-            throw new RuntimeException(STUDENT_NOT_EXISTS.formatted(id));
+            throw new NotFoundException(STUDENT_NOT_EXISTS.formatted(id));
         }
 
         studentRepository.deleteById(id);
