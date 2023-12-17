@@ -1,5 +1,7 @@
 package com.smarty.domain.student.model;
 
+import com.smarty.domain.account.model.AccountResponseDTO;
+
 public record StudentResponseDTO(
 
         Long id,
@@ -7,6 +9,7 @@ public record StudentResponseDTO(
         String surname,
         int index,
         int year,
-        int semester
+        int semester,
+        AccountResponseDTO account
 
 ) { }
