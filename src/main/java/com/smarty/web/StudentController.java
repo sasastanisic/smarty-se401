@@ -7,6 +7,7 @@ import com.smarty.domain.student.service.StudentService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,6 +42,7 @@ public class StudentController {
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteStudent(@PathVariable Long id) {
         studentService.deleteStudent(id);
     }
