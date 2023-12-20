@@ -2,6 +2,7 @@ package com.smarty.domain.student.service;
 
 import com.smarty.domain.account.enums.Role;
 import com.smarty.domain.account.service.AccountService;
+import com.smarty.domain.major.service.MajorService;
 import com.smarty.domain.student.entity.Student;
 import com.smarty.domain.student.model.StudentRequestDTO;
 import com.smarty.domain.student.model.StudentResponseDTO;
@@ -24,22 +25,27 @@ public class StudentServiceImpl implements StudentService {
     private final StudentRepository studentRepository;
     private final StudentMapper studentMapper;
     private final AccountService accountService;
+    private final MajorService majorService;
 
     public StudentServiceImpl(StudentRepository studentRepository,
                               StudentMapper studentMapper,
-                              AccountService accountService) {
+                              AccountService accountService,
+                              MajorService majorService) {
         this.studentRepository = studentRepository;
         this.studentMapper = studentMapper;
         this.accountService = accountService;
+        this.majorService = majorService;
     }
 
     @Override
     public StudentResponseDTO createStudent(StudentRequestDTO studentRequestDTO) {
         Student student = studentMapper.toStudent(studentRequestDTO);
+        var major = majorService.getById(studentRequestDTO.majorId());
 
         validateIndex(studentRequestDTO.index());
         accountService.existsByEmail(studentRequestDTO.account().email());
         student.getAccount().setRole(Role.STUDENT);
+        student.setMajor(major);
         studentRepository.save(student);
 
         return studentMapper.toStudentResponseDTO(student);

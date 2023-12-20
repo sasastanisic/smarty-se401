@@ -53,7 +53,7 @@ public class MajorServiceImpl implements MajorService {
         return majorMapper.toMajorResponseDTO(getById(id));
     }
 
-    private Major getById(Long id) {
+    public Major getById(Long id) {
         Optional<Major> optionalMajor = majorRepository.findById(id);
 
         if (optionalMajor.isEmpty()) {

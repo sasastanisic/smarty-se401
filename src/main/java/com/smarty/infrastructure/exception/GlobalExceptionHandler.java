@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +37,14 @@ public class GlobalExceptionHandler {
                 .value();
 
         ApiErrorResponse response = new ApiErrorResponse(e.getMessage(), status, ZonedDateTime.now());
+
+        return new ResponseEntity<>(response, status);
+    }
+
+    @ExceptionHandler(value = {SQLIntegrityConstraintViolationException.class})
+    public ResponseEntity<ApiErrorResponse> handleSqlConstraintException() {
+        HttpStatus status = HttpStatus.FORBIDDEN;
+        ApiErrorResponse response = new ApiErrorResponse("Parent row can't be deleted or updated", status, ZonedDateTime.now());
 
         return new ResponseEntity<>(response, status);
     }

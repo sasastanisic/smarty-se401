@@ -1,6 +1,7 @@
 package com.smarty.domain.student.model;
 
 import com.smarty.domain.account.model.AccountResponseDTO;
+import com.smarty.domain.major.model.MajorResponseDTO;
 
 public record StudentResponseDTO(
 
@@ -10,6 +11,7 @@ public record StudentResponseDTO(
         int index,
         int year,
         int semester,
-        AccountResponseDTO account
+        AccountResponseDTO account,
+        MajorResponseDTO major
 
 ) { }

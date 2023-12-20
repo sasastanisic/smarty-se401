@@ -1,5 +1,6 @@
 package com.smarty.domain.major.service;
 
+import com.smarty.domain.major.entity.Major;
 import com.smarty.domain.major.model.MajorRequestDTO;
 import com.smarty.domain.major.model.MajorResponseDTO;
 import com.smarty.domain.major.model.MajorUpdateDTO;
@@ -13,6 +14,8 @@ public interface MajorService {
     Page<MajorResponseDTO> getAllMajors(Pageable pageable);
 
     MajorResponseDTO getMajorById(Long id);
+
+    Major getById(Long id);
 
     MajorResponseDTO updateMajor(Long id, MajorUpdateDTO majorUpdateDTO);
 
