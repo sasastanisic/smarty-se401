@@ -3,6 +3,7 @@ package com.smarty.domain.student.service;
 import com.smarty.domain.account.enums.Role;
 import com.smarty.domain.account.service.AccountService;
 import com.smarty.domain.major.service.MajorService;
+import com.smarty.domain.status.service.StatusService;
 import com.smarty.domain.student.entity.Student;
 import com.smarty.domain.student.model.StudentRequestDTO;
 import com.smarty.domain.student.model.StudentResponseDTO;
@@ -26,26 +27,31 @@ public class StudentServiceImpl implements StudentService {
     private final StudentMapper studentMapper;
     private final AccountService accountService;
     private final MajorService majorService;
+    private final StatusService statusService;
 
     public StudentServiceImpl(StudentRepository studentRepository,
                               StudentMapper studentMapper,
                               AccountService accountService,
-                              MajorService majorService) {
+                              MajorService majorService,
+                              StatusService statusService) {
         this.studentRepository = studentRepository;
         this.studentMapper = studentMapper;
         this.accountService = accountService;
         this.majorService = majorService;
+        this.statusService = statusService;
     }
 
     @Override
     public StudentResponseDTO createStudent(StudentRequestDTO studentRequestDTO) {
         Student student = studentMapper.toStudent(studentRequestDTO);
         var major = majorService.getById(studentRequestDTO.majorId());
+        var status = statusService.getStatusById(studentRequestDTO.statusId());
 
         validateIndex(studentRequestDTO.index());
         accountService.existsByEmail(studentRequestDTO.account().email());
         student.getAccount().setRole(Role.STUDENT);
         student.setMajor(major);
+        student.setStatus(status);
         studentRepository.save(student);
 
         return studentMapper.toStudentResponseDTO(student);
@@ -80,8 +86,12 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public StudentResponseDTO updateStudent(Long id, StudentUpdateDTO studentUpdateDTO) {
         Student student = getById(id);
+        var major = majorService.getById(studentUpdateDTO.majorId());
+        var status = statusService.getStatusById(studentUpdateDTO.statusId());
         studentMapper.updateStudentFromDTO(studentUpdateDTO, student);
 
+        student.setMajor(major);
+        student.setStatus(status);
         studentRepository.save(student);
 
         return studentMapper.toStudentResponseDTO(student);

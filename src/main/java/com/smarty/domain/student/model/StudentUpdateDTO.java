@@ -27,6 +27,9 @@ public record StudentUpdateDTO(
         AccountUpdateDTO account,
 
         @NotNull(message = "Major can't be null")
-        Long majorId
+        Long majorId,
+
+        @NotNull(message = "Study status can't be null")
+        Long statusId
 
 ) { }

@@ -2,6 +2,7 @@ package com.smarty.domain.student.entity;
 
 import com.smarty.domain.account.entity.Account;
 import com.smarty.domain.major.entity.Major;
+import com.smarty.domain.status.entity.Status;
 import jakarta.persistence.*;
 
 @Entity(name = "student")
@@ -33,6 +34,10 @@ public class Student {
     @ManyToOne
     @JoinColumn(name = "major_id", nullable = false)
     private Major major;
+
+    @ManyToOne
+    @JoinColumn(name = "study_status_id", nullable = false)
+    private Status status;
 
     public Student() {
     }
@@ -99,6 +104,14 @@ public class Student {
 
     public void setMajor(Major major) {
         this.major = major;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
     }
 
 }
