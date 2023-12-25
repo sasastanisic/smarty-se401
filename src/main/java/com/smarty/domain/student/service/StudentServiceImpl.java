@@ -49,6 +49,7 @@ public class StudentServiceImpl implements StudentService {
 
         validateIndex(studentRequestDTO.index());
         accountService.existsByEmail(studentRequestDTO.account().email());
+
         student.getAccount().setRole(Role.STUDENT);
         student.setMajor(major);
         student.setStatus(status);
