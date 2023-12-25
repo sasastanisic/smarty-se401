@@ -106,5 +106,6 @@ public class StudentServiceImpl implements StudentService {
 
         studentRepository.deleteById(id);
     }
+    // TODO: additional check -> year & semester
 
 }
