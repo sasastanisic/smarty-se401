@@ -5,6 +5,7 @@ import com.smarty.domain.course.model.CourseRequestDTO;
 import com.smarty.domain.course.model.CourseResponseDTO;
 import com.smarty.domain.course.model.CourseUpdateDTO;
 import com.smarty.domain.course.repository.CourseRepository;
+import com.smarty.infrastructure.exception.exceptions.BadRequestException;
 import com.smarty.infrastructure.exception.exceptions.ConflictException;
 import com.smarty.infrastructure.exception.exceptions.NotFoundException;
 import com.smarty.infrastructure.mapper.CourseMapper;
@@ -12,7 +13,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class CourseServiceImpl implements CourseService {
@@ -32,6 +35,7 @@ public class CourseServiceImpl implements CourseService {
         Course course = courseMapper.toCourse(courseRequestDTO);
 
         validateCode(courseRequestDTO.code());
+        validateYearAndSemester(courseRequestDTO.year(), courseRequestDTO.semester());
         courseRepository.save(course);
 
         return courseMapper.toCourseResponseDTO(course);
@@ -40,6 +44,21 @@ public class CourseServiceImpl implements CourseService {
     private void validateCode(String code) {
         if (courseRepository.existsByCode(code)) {
             throw new ConflictException("Course with code %s already exists".formatted(code));
+        }
+    }
+
+    private void validateYearAndSemester(int year, int semester) {
+        Map<Integer, Set<Integer>> validCombinations = Map.of(
+                1, Set.of(1, 2),
+                2, Set.of(3, 4),
+                3, Set.of(5, 6),
+                4, Set.of(7, 8)
+        );
+
+        Set<Integer> allowedValues = validCombinations.get(year);
+
+        if (!allowedValues.contains(semester)) {
+            throw new BadRequestException("Combination of year %d and semester %d isn't valid".formatted(year, semester));
         }
     }
 
@@ -68,6 +87,7 @@ public class CourseServiceImpl implements CourseService {
         Course course = getById(id);
         courseMapper.updateCourseFromDTO(courseUpdateDTO, course);
 
+        validateYearAndSemester(courseUpdateDTO.year(), courseUpdateDTO.semester());
         courseRepository.save(course);
 
         return courseMapper.toCourseResponseDTO(course);
@@ -81,6 +101,5 @@ public class CourseServiceImpl implements CourseService {
 
         courseRepository.deleteById(id);
     }
-    // TODO: additional check -> year & semester
 
 }
