@@ -1,6 +1,7 @@
 package com.smarty.domain.student.service;
 
 import com.smarty.domain.account.enums.Role;
+import com.smarty.domain.account.model.PasswordUpdateDTO;
 import com.smarty.domain.account.service.AccountService;
 import com.smarty.domain.major.service.MajorService;
 import com.smarty.domain.status.service.StatusService;
@@ -116,6 +117,23 @@ public class StudentServiceImpl implements StudentService {
         studentRepository.save(student);
 
         return studentMapper.toStudentResponseDTO(student);
+    }
+
+    @Override
+    public StudentResponseDTO updatePassword(Long id, PasswordUpdateDTO passwordUpdateDTO) {
+        Student student = getById(id);
+
+        arePasswordsMatching(passwordUpdateDTO.password(), passwordUpdateDTO.confirmedPassword());
+        student.getAccount().setPassword(passwordUpdateDTO.password());
+        studentRepository.save(student);
+
+        return studentMapper.toStudentResponseDTO(student);
+    }
+
+    private void arePasswordsMatching(String password, String confirmedPassword) {
+        if (!password.matches(confirmedPassword)) {
+            throw new BadRequestException("Passwords aren't matching");
+        }
     }
 
     @Override

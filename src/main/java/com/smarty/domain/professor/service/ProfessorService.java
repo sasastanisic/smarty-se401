@@ -1,5 +1,6 @@
 package com.smarty.domain.professor.service;
 
+import com.smarty.domain.account.model.PasswordUpdateDTO;
 import com.smarty.domain.professor.model.ProfessorRequestDTO;
 import com.smarty.domain.professor.model.ProfessorResponseDTO;
 import com.smarty.domain.professor.model.ProfessorUpdateDTO;
@@ -15,6 +16,8 @@ public interface ProfessorService {
     ProfessorResponseDTO getProfessorById(Long id);
 
     ProfessorResponseDTO updateProfessor(Long id, ProfessorUpdateDTO professorUpdateDTO);
+
+    ProfessorResponseDTO updatePassword(Long id, PasswordUpdateDTO passwordUpdateDTO);
 
     void deleteProfessor(Long id);
 

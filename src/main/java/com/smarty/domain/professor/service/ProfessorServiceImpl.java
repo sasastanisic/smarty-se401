@@ -1,6 +1,7 @@
 package com.smarty.domain.professor.service;
 
 import com.smarty.domain.account.enums.Role;
+import com.smarty.domain.account.model.PasswordUpdateDTO;
 import com.smarty.domain.account.service.AccountService;
 import com.smarty.domain.professor.entity.Professor;
 import com.smarty.domain.professor.model.ProfessorRequestDTO;
@@ -84,6 +85,23 @@ public class ProfessorServiceImpl implements ProfessorService {
     }
 
     @Override
+    public ProfessorResponseDTO updatePassword(Long id, PasswordUpdateDTO passwordUpdateDTO) {
+        Professor professor = getById(id);
+
+        arePasswordsMatching(passwordUpdateDTO.password(), passwordUpdateDTO.confirmedPassword());
+        professor.getAccount().setPassword(passwordUpdateDTO.password());
+        professorRepository.save(professor);
+
+        return professorMapper.toProfessorResponseDTO(professor);
+    }
+
+    private void arePasswordsMatching(String password, String confirmedPassword) {
+        if (!password.matches(confirmedPassword)) {
+            throw new BadRequestException("Passwords aren't matching");
+        }
+    }
+
+    @Override
     public void deleteProfessor(Long id) {
         if (!professorRepository.existsById(id)) {
             throw new NotFoundException(PROFESSOR_NOT_EXISTS.formatted(id));
@@ -93,4 +111,3 @@ public class ProfessorServiceImpl implements ProfessorService {
     }
 
 }
-// TODO: Password -> from PUT to PATCH

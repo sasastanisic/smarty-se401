@@ -1,5 +1,6 @@
 package com.smarty.web;
 
+import com.smarty.domain.account.model.PasswordUpdateDTO;
 import com.smarty.domain.professor.model.ProfessorRequestDTO;
 import com.smarty.domain.professor.model.ProfessorResponseDTO;
 import com.smarty.domain.professor.model.ProfessorUpdateDTO;
@@ -39,6 +40,11 @@ public class ProfessorController {
     @PutMapping("/{id}")
     public ResponseEntity<ProfessorResponseDTO> updateProfessor(@PathVariable Long id, @Valid @RequestBody ProfessorUpdateDTO professorUpdateDTO) {
         return ResponseEntity.ok(professorService.updateProfessor(id, professorUpdateDTO));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<ProfessorResponseDTO> updatePassword(@PathVariable Long id, @Valid @RequestBody PasswordUpdateDTO passwordUpdateDTO) {
+        return ResponseEntity.ok(professorService.updatePassword(id, passwordUpdateDTO));
     }
 
     @DeleteMapping("/{id}")
