@@ -14,7 +14,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void existsByEmail(String email) {
+    public void validateEmail(String email) {
         if (accountRepository.existsByEmail(email)) {
             throw new ConflictException("Account with email %s already exists".formatted(email));
         }

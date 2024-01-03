@@ -3,6 +3,7 @@ package com.smarty.infrastructure.exception;
 import com.smarty.infrastructure.exception.exceptions.BaseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -45,6 +46,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleSqlConstraintException() {
         HttpStatus status = HttpStatus.FORBIDDEN;
         ApiErrorResponse response = new ApiErrorResponse("Parent row can't be deleted or updated", status, ZonedDateTime.now());
+
+        return new ResponseEntity<>(response, status);
+    }
+
+    @ExceptionHandler(value = {HttpRequestMethodNotSupportedException.class})
+    public ResponseEntity<ApiErrorResponse> handleRequestNotSupportedException(Exception e) {
+        HttpStatus status = HttpStatus.METHOD_NOT_ALLOWED;
+        ApiErrorResponse response = new ApiErrorResponse(e.getMessage(), status, ZonedDateTime.now());
 
         return new ResponseEntity<>(response, status);
     }

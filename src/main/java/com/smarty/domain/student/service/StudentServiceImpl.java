@@ -53,7 +53,7 @@ public class StudentServiceImpl implements StudentService {
 
         validateIndex(studentRequestDTO.index());
         validateYearAndSemester(studentRequestDTO.year(), studentRequestDTO.semester());
-        accountService.existsByEmail(studentRequestDTO.account().email());
+        accountService.validateEmail(studentRequestDTO.account().email());
 
         student.getAccount().setRole(Role.STUDENT);
         student.setMajor(major);

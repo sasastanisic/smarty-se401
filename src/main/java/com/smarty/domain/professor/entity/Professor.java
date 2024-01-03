@@ -1,7 +1,11 @@
 package com.smarty.domain.professor.entity;
 
 import com.smarty.domain.account.entity.Account;
+import com.smarty.domain.engagement.entity.Engagement;
 import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity(name = "professor")
 public class Professor {
@@ -22,6 +26,9 @@ public class Professor {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
+
+    @OneToMany(mappedBy = "professor", cascade = CascadeType.ALL)
+    private List<Engagement> engagements = new ArrayList<>();
 
     public Professor() {
     }
@@ -64,6 +71,14 @@ public class Professor {
 
     public void setAccount(Account account) {
         this.account = account;
+    }
+
+    public List<Engagement> getEngagements() {
+        return engagements;
+    }
+
+    public void setEngagements(List<Engagement> engagements) {
+        this.engagements = engagements;
     }
 
 }
