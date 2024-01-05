@@ -50,8 +50,8 @@ public class TaskServiceImpl implements TaskService {
         return taskRepository.findAll(pageable).map(taskMapper::toTaskResponseDTO);
     }
 
-    private void validateTypeByCourse(Type type, Long courseId) {
-        if (taskRepository.existsByTypeAndCourse_Id(type, courseId)) {
+    private void validateTypeByCourse(String type, Long courseId) {
+        if (taskRepository.existsByTypeAndCourse_Id(Type.valueOf(type), courseId)) {
             throw new ConflictException("Course with id %d already has task type '%s'".formatted(courseId, type));
         }
     }
