@@ -1,6 +1,7 @@
 package com.smarty.domain.course.domain;
 
 import com.smarty.domain.engagement.entity.Engagement;
+import com.smarty.domain.task.entity.Task;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -33,6 +34,9 @@ public class Course {
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
     private List<Engagement> engagements = new ArrayList<>();
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
+    private List<Task> tasks = new ArrayList<>();
 
     public Course() {
     }
@@ -99,6 +103,14 @@ public class Course {
 
     public void setEngagements(List<Engagement> engagements) {
         this.engagements = engagements;
+    }
+
+    public List<Task> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(List<Task> tasks) {
+        this.tasks = tasks;
     }
 
 }
