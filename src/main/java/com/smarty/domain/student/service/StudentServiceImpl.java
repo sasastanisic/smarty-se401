@@ -94,7 +94,7 @@ public class StudentServiceImpl implements StudentService {
         return studentMapper.toStudentResponseDTO(getById(id));
     }
 
-    private Student getById(Long id) {
+    public Student getById(Long id) {
         Optional<Student> optionalStudent = studentRepository.findById(id);
 
         if (optionalStudent.isEmpty()) {

@@ -2,8 +2,8 @@ package com.smarty.domain.professor.model;
 
 import com.smarty.domain.account.model.AccountRequestDTO;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PositiveOrZero;
 
 public record ProfessorRequestDTO(
 
@@ -13,7 +13,7 @@ public record ProfessorRequestDTO(
         @NotBlank(message = "Surname of professor can't be blank")
         String surname,
 
-        @Min(value = 0, message = "Years of experience can't be negative")
+        @PositiveOrZero(message = "Years of experience can't be negative")
         int yearsOfExperience,
 
         @Valid
