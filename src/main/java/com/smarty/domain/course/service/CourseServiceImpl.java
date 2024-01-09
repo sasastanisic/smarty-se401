@@ -83,6 +83,13 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
+    public void existsById(Long id) {
+        if (!courseRepository.existsById(id)) {
+            throw new NotFoundException(COURSE_NOT_EXISTS.formatted(id));
+        }
+    }
+
+    @Override
     public CourseResponseDTO updateCourse(Long id, CourseUpdateDTO courseUpdateDTO) {
         Course course = getById(id);
         courseMapper.updateCourseFromDTO(courseUpdateDTO, course);
@@ -95,10 +102,7 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public void deleteCourse(Long id) {
-        if (!courseRepository.existsById(id)) {
-            throw new NotFoundException(COURSE_NOT_EXISTS.formatted(id));
-        }
-
+        existsById(id);
         courseRepository.deleteById(id);
     }
 

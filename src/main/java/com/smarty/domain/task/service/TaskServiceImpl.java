@@ -8,18 +8,21 @@ import com.smarty.domain.task.model.TaskResponseDTO;
 import com.smarty.domain.task.model.TaskUpdateDTO;
 import com.smarty.domain.task.repository.TaskRepository;
 import com.smarty.infrastructure.exception.exceptions.ConflictException;
+import com.smarty.infrastructure.exception.exceptions.ForbiddenException;
 import com.smarty.infrastructure.exception.exceptions.NotFoundException;
 import com.smarty.infrastructure.mapper.TaskMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
 public class TaskServiceImpl implements TaskService {
 
     private static final String TASK_NOT_EXISTS = "Task with id %d doesn't exist";
+    private static final int MAX_TASK_POINTS_BY_COURSE = 70;
 
     private final TaskRepository taskRepository;
     private final TaskMapper taskMapper;
@@ -39,15 +42,11 @@ public class TaskServiceImpl implements TaskService {
         var course = courseService.getById(taskRequestDTO.courseId());
 
         validateTypeByCourse(taskRequestDTO.type(), taskRequestDTO.courseId());
+        validateTotalTaskPointsByCourse(taskRequestDTO.maxPoints(), taskRequestDTO.numberOfTasks(), taskRequestDTO.courseId());
         task.setCourse(course);
         taskRepository.save(task);
 
         return taskMapper.toTaskResponseDTO(task);
-    }
-
-    @Override
-    public Page<TaskResponseDTO> getAllTasks(Pageable pageable) {
-        return taskRepository.findAll(pageable).map(taskMapper::toTaskResponseDTO);
     }
 
     private void validateTypeByCourse(String type, Long courseId) {
@@ -56,12 +55,27 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
+    private void validateTotalTaskPointsByCourse(double maxPoints, int numberOfTasks, Long courseId) {
+        var totalTaskPoints = taskRepository.findTotalTaskPointsByCourse(courseId);
+
+        totalTaskPoints = (totalTaskPoints == null) ? 0.0 : totalTaskPoints;
+
+        if (totalTaskPoints + maxPoints * numberOfTasks > MAX_TASK_POINTS_BY_COURSE) {
+            throw new ForbiddenException("The limit of " + MAX_TASK_POINTS_BY_COURSE + " points for saving tasks has been reached");
+        }
+    }
+
+    @Override
+    public Page<TaskResponseDTO> getAllTasks(Pageable pageable) {
+        return taskRepository.findAll(pageable).map(taskMapper::toTaskResponseDTO);
+    }
+
     @Override
     public TaskResponseDTO getTaskById(Long id) {
         return taskMapper.toTaskResponseDTO(getById(id));
     }
 
-    private Task getById(Long id) {
+    public Task getById(Long id) {
         Optional<Task> optionalTask = taskRepository.findById(id);
 
         if (optionalTask.isEmpty()) {
@@ -69,6 +83,21 @@ public class TaskServiceImpl implements TaskService {
         }
 
         return optionalTask.get();
+    }
+
+    @Override
+    public List<TaskResponseDTO> getTasksByCourse(Long courseId) {
+        List<Task> tasksByCourse = taskRepository.findByCourse_Id(courseId);
+        courseService.existsById(courseId);
+
+        if (tasksByCourse.isEmpty()) {
+            throw new NotFoundException("There are 0 tasks for course with id %d".formatted(courseId));
+        }
+
+        return tasksByCourse
+                .stream()
+                .map(taskMapper::toTaskResponseDTO)
+                .toList();
     }
 
     @Override

@@ -8,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.ZonedDateTime;
@@ -54,6 +55,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleRequestNotSupportedException(Exception e) {
         HttpStatus status = HttpStatus.METHOD_NOT_ALLOWED;
         ApiErrorResponse response = new ApiErrorResponse(e.getMessage(), status, ZonedDateTime.now());
+
+        return new ResponseEntity<>(response, status);
+    }
+
+    @ExceptionHandler(value = {MethodArgumentTypeMismatchException.class})
+    public ResponseEntity<ApiErrorResponse> handleArgumentTypeMismatchException() {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ApiErrorResponse response = new ApiErrorResponse("The provided path argument is not a valid type", status, ZonedDateTime.now());
 
         return new ResponseEntity<>(response, status);
     }
