@@ -6,8 +6,10 @@ import com.smarty.domain.activity.model.ActivityResponseDTO;
 import com.smarty.domain.activity.model.ActivityUpdateDTO;
 import com.smarty.domain.activity.repository.ActivityRepository;
 import com.smarty.domain.student.service.StudentService;
+import com.smarty.domain.task.enums.Type;
 import com.smarty.domain.task.service.TaskService;
 import com.smarty.infrastructure.exception.exceptions.ConflictException;
+import com.smarty.infrastructure.exception.exceptions.ForbiddenException;
 import com.smarty.infrastructure.exception.exceptions.NotFoundException;
 import com.smarty.infrastructure.mapper.ActivityMapper;
 import org.springframework.data.domain.Page;
@@ -41,6 +43,8 @@ public class ActivityServiceImpl implements ActivityService {
         var student = studentService.getById(activityRequestDTO.studentId());
 
         validateActivityNameForStudent(activityRequestDTO.activityName(), activityRequestDTO.studentId());
+        validateActivityPoints(activityRequestDTO.points(), task.getMaxPoints());
+        validateNumberOfActivitiesByTaskType(String.valueOf(task.getType()), activityRequestDTO.studentId(), task.getCourse().getId(), task.getNumberOfTasks());
 
         activity.setTask(task);
         activity.setStudent(student);
@@ -52,6 +56,20 @@ public class ActivityServiceImpl implements ActivityService {
     private void validateActivityNameForStudent(String activityName, Long studentId) {
         if (activityRepository.existsByActivityNameAndStudent_Id(activityName, studentId)) {
             throw new ConflictException("Activity named %s already exists for student with id %d".formatted(activityName, studentId));
+        }
+    }
+
+    private void validateActivityPoints(double activityPoints, double maxPoints) {
+        if (activityPoints > maxPoints) {
+            throw new ForbiddenException("It is not allowed to enter %.2f points for this activity".formatted(activityPoints));
+        }
+    }
+
+    private void validateNumberOfActivitiesByTaskType(String type, Long studentId, Long courseId, int numberOfTasks) {
+        int numberOfActivities = activityRepository.findNumberOfActivitiesByTaskType(Type.valueOf(type), studentId, courseId);
+
+        if (numberOfActivities >= numberOfTasks) {
+            throw new ForbiddenException("Limit for storing activities by type %s is reached".formatted(type));
         }
     }
 
@@ -72,8 +90,11 @@ public class ActivityServiceImpl implements ActivityService {
     @Override
     public ActivityResponseDTO updateActivity(Long id, ActivityUpdateDTO activityUpdateDTO) {
         Activity activity = getById(id);
+        var task = taskService.getById(activity.getTask().getId());
         activityMapper.updateActivityFromDTO(activityUpdateDTO, activity);
 
+        validateActivityPoints(activityUpdateDTO.points(), task.getMaxPoints());
+        activity.setTask(task);
         activityRepository.save(activity);
 
         return activityMapper.toActivityResponseDTO(activity);
