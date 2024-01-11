@@ -68,7 +68,7 @@ public class ActivityServiceImpl implements ActivityService {
     private void validateNumberOfActivitiesByTaskType(String type, Long studentId, Long courseId, int numberOfTasks) {
         int numberOfActivities = activityRepository.findNumberOfActivitiesByTaskType(Type.valueOf(type), studentId, courseId);
 
-        if (numberOfActivities >= numberOfTasks) {
+        if (numberOfActivities == numberOfTasks) {
             throw new ForbiddenException("Limit for storing activities by type %s is reached".formatted(type));
         }
     }
