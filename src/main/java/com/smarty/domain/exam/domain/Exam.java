@@ -3,6 +3,7 @@ package com.smarty.domain.exam.domain;
 import com.smarty.domain.course.domain.Course;
 import com.smarty.domain.student.entity.Student;
 import jakarta.persistence.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 
@@ -23,6 +24,7 @@ public class Exam {
     private double points;
 
     @Column(nullable = false)
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateOfExamination;
 
     @Column

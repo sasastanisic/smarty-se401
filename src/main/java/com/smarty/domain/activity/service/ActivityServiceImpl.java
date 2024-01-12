@@ -5,6 +5,7 @@ import com.smarty.domain.activity.model.ActivityRequestDTO;
 import com.smarty.domain.activity.model.ActivityResponseDTO;
 import com.smarty.domain.activity.model.ActivityUpdateDTO;
 import com.smarty.domain.activity.repository.ActivityRepository;
+import com.smarty.domain.exam.service.ExamService;
 import com.smarty.domain.student.service.StudentService;
 import com.smarty.domain.task.enums.Type;
 import com.smarty.domain.task.service.TaskService;
@@ -12,6 +13,7 @@ import com.smarty.infrastructure.exception.exceptions.ConflictException;
 import com.smarty.infrastructure.exception.exceptions.ForbiddenException;
 import com.smarty.infrastructure.exception.exceptions.NotFoundException;
 import com.smarty.infrastructure.mapper.ActivityMapper;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,15 +27,18 @@ public class ActivityServiceImpl implements ActivityService {
     private final ActivityMapper activityMapper;
     private final TaskService taskService;
     private final StudentService studentService;
+    private final ExamService examService;
 
     public ActivityServiceImpl(ActivityRepository activityRepository,
                                ActivityMapper activityMapper,
                                TaskService taskService,
-                               StudentService studentService) {
+                               StudentService studentService,
+                               @Lazy ExamService examService) {
         this.activityRepository = activityRepository;
         this.activityMapper = activityMapper;
         this.taskService = taskService;
         this.studentService = studentService;
+        this.examService = examService;
     }
 
     @Override
@@ -41,6 +46,9 @@ public class ActivityServiceImpl implements ActivityService {
         Activity activity = activityMapper.toActivity(activityRequestDTO);
         var task = taskService.getById(activityRequestDTO.taskId());
         var student = studentService.getById(activityRequestDTO.studentId());
+
+        examService.checkCourseAndStudentYear(student, task.getCourse());
+        examService.isExamAlreadyPassed(student, task.getCourse());
 
         validateActivityNameForStudent(activityRequestDTO.activityName(), activityRequestDTO.studentId());
         validateActivityPoints(activityRequestDTO.points(), task.getMaxPoints());
@@ -85,6 +93,11 @@ public class ActivityServiceImpl implements ActivityService {
 
     private Activity getById(Long id) {
         return activityRepository.findById(id).orElseThrow(() -> new NotFoundException(ACTIVITY_NOT_EXISTS.formatted(id)));
+    }
+
+    @Override
+    public Double getTotalActivityPointsByCourse(Long studentId, Long courseId) {
+        return activityRepository.findTotalActivityPointsByCourse(studentId, courseId);
     }
 
     @Override

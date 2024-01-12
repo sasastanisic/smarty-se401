@@ -16,4 +16,9 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
             "WHERE t.type = :type AND a.student.id = :studentId AND t.course.id = :courseId")
     int findNumberOfActivitiesByTaskType(Type type, Long studentId, Long courseId);
 
+    @Query("SELECT SUM(a.points) FROM activity a " +
+            "JOIN task t ON a.task.id = t.id " +
+            "WHERE a.student.id = :studentId AND t.course.id = :courseId")
+    Double findTotalActivityPointsByCourse(Long studentId, Long courseId);
+
 }
