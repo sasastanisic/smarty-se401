@@ -16,6 +16,8 @@ public interface ActivityService {
 
     Double getTotalActivityPointsByCourse(Long studentId, Long courseId);
 
+    void isProjectFinished(Long studentId);
+
     ActivityResponseDTO updateActivity(Long id, ActivityUpdateDTO activityUpdateDTO);
 
     void deleteActivity(Long id);

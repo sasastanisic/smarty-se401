@@ -58,7 +58,7 @@ public class TaskServiceImpl implements TaskService {
     private void validateTotalTaskPointsByCourse(double maxPoints, int numberOfTasks, Long courseId) {
         var totalTaskPoints = taskRepository.findTotalTaskPointsByCourse(courseId);
 
-        totalTaskPoints = (totalTaskPoints == null) ? 0.0 : totalTaskPoints;
+        totalTaskPoints = totalTaskPoints == null ? 0.0 : totalTaskPoints;
 
         if (totalTaskPoints + maxPoints * numberOfTasks > MAX_TASK_POINTS_BY_COURSE) {
             throw new ForbiddenException("The limit of " + MAX_TASK_POINTS_BY_COURSE + " points for saving tasks has been reached");

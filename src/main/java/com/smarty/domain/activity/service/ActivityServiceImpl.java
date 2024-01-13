@@ -101,6 +101,13 @@ public class ActivityServiceImpl implements ActivityService {
     }
 
     @Override
+    public void isProjectFinished(Long studentId) {
+        if (!activityRepository.isProjectFinished(studentId)) {
+            throw new ForbiddenException("Student with id %d can't take the exam because task project isn't finished".formatted(studentId));
+        }
+    }
+
+    @Override
     public ActivityResponseDTO updateActivity(Long id, ActivityUpdateDTO activityUpdateDTO) {
         Activity activity = getById(id);
         var task = taskService.getById(activity.getTask().getId());

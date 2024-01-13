@@ -10,6 +10,7 @@ import com.smarty.domain.exam.model.ExamUpdateDTO;
 import com.smarty.domain.exam.repository.ExamRepository;
 import com.smarty.domain.student.entity.Student;
 import com.smarty.domain.student.service.StudentService;
+import com.smarty.infrastructure.exception.exceptions.BadRequestException;
 import com.smarty.infrastructure.exception.exceptions.ConflictException;
 import com.smarty.infrastructure.exception.exceptions.ForbiddenException;
 import com.smarty.infrastructure.exception.exceptions.NotFoundException;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 public class ExamServiceImpl implements ExamService {
@@ -52,11 +54,16 @@ public class ExamServiceImpl implements ExamService {
         var course = courseService.getById(examRequestDTO.courseId());
 
         double totalPoints = getTotalPoints(examRequestDTO.studentId(), examRequestDTO.courseId(), examRequestDTO.points());
+        int grade = calculateGrade(totalPoints);
+        grade = checkGrade(examRequestDTO.points(), grade);
 
         checkCourseAndStudentYear(student, course);
         isExamAlreadyPassed(student, course);
         validateTotalActivityPoints(examRequestDTO.studentId(), examRequestDTO.courseId());
+        activityService.isProjectFinished(examRequestDTO.studentId());
+        validateExaminationPeriod(examRequestDTO.examinationPeriod());
 
+        exam.setGrade(grade);
         exam.setDateOfExamination(LocalDate.now());
         exam.setTotalPoints(totalPoints);
         exam.setStudent(student);
@@ -69,6 +76,23 @@ public class ExamServiceImpl implements ExamService {
     private double getTotalPoints(Long studentId, Long courseId, double examPoints) {
         var totalActivityPoints = activityService.getTotalActivityPointsByCourse(studentId, courseId);
         return totalActivityPoints == null ? 0.0 : totalActivityPoints + examPoints;
+    }
+
+    private int calculateGrade(double totalPoints) {
+        int bestGrade = 10;
+
+        return switch ((int) Math.floor(totalPoints / 10)) {
+            case 10, 9 -> bestGrade;
+            case 8 -> 9;
+            case 7 -> 8;
+            case 6 -> 7;
+            case 5 -> 6;
+            default -> 5;
+        };
+    }
+
+    private int checkGrade(double examPoints, int grade) {
+        return examPoints < 15 ? 5 : grade;
     }
 
     @Override
@@ -89,11 +113,19 @@ public class ExamServiceImpl implements ExamService {
     private void validateTotalActivityPoints(Long studentId, Long courseId) {
         var totalActivityPoints = activityService.getTotalActivityPointsByCourse(studentId, courseId);
 
-        totalActivityPoints = (totalActivityPoints == null) ? 0.0 : totalActivityPoints;
+        totalActivityPoints = totalActivityPoints == null ? 0.0 : totalActivityPoints;
 
         if (totalActivityPoints < MIN_ACTIVITY_POINTS_REQUIRED) {
             throw new ForbiddenException("Student can't take the exam because he needs at least 35 points for activities. " +
                     "Right now he has %.2f points".formatted(totalActivityPoints));
+        }
+    }
+
+    private void validateExaminationPeriod(String examinationPeriod) {
+        List<String> validPeriods = List.of("January A", "January B", "April", "June A", "June B", "September", "October", "December");
+
+        if (!validPeriods.contains(examinationPeriod)) {
+            throw new BadRequestException("Examination period %s isn't valid".formatted(examinationPeriod));
         }
     }
 
