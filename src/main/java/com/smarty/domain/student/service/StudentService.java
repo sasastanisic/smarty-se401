@@ -18,6 +18,8 @@ public interface StudentService {
 
     Student getById(Long id);
 
+    void existsById(Long id);
+
     StudentResponseDTO updateStudent(Long id, StudentUpdateDTO studentUpdateDTO);
 
     StudentResponseDTO updatePassword(Long id, PasswordUpdateDTO passwordUpdateDTO);

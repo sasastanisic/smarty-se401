@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("api/v1/exams")
 public class ExamController {
@@ -34,6 +36,21 @@ public class ExamController {
     @GetMapping("/{id}")
     public ResponseEntity<ExamResponseDTO> getExamById(@PathVariable Long id) {
         return ResponseEntity.ok(examService.getExamById(id));
+    }
+
+    @GetMapping("/by-student/{studentId}")
+    public ResponseEntity<List<ExamResponseDTO>> getExamHistoryByStudent(@PathVariable Long studentId) {
+        return ResponseEntity.ok(examService.getExamHistoryByStudent(studentId));
+    }
+
+    @GetMapping("/by-course/{courseId}")
+    public ResponseEntity<List<ExamResponseDTO>> getExamHistoryByCourse(@PathVariable Long courseId) {
+        return ResponseEntity.ok(examService.getExamHistoryByCourse(courseId));
+    }
+
+    @GetMapping("/by-student-passed/{studentId}")
+    public ResponseEntity<List<ExamResponseDTO>> getPassedExamsByStudent(@PathVariable Long studentId, @RequestParam int year) {
+        return ResponseEntity.ok(examService.getPassedExamsByStudent(studentId, year));
     }
 
     @PutMapping("/{id}")

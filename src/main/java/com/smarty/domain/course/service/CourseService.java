@@ -19,6 +19,8 @@ public interface CourseService {
 
     void existsById(Long id);
 
+    void existsByYear(int year);
+
     CourseResponseDTO updateCourse(Long id, CourseUpdateDTO courseUpdateDTO);
 
     void deleteCourse(Long id);

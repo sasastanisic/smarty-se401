@@ -105,6 +105,13 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    public void existsById(Long id) {
+        if (!studentRepository.existsById(id)) {
+            throw new NotFoundException(STUDENT_NOT_EXISTS.formatted(id));
+        }
+    }
+
+    @Override
     public StudentResponseDTO updateStudent(Long id, StudentUpdateDTO studentUpdateDTO) {
         Student student = getById(id);
         var major = majorService.getById(studentUpdateDTO.majorId());
@@ -138,10 +145,7 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public void deleteStudent(Long id) {
-        if (!studentRepository.existsById(id)) {
-            throw new NotFoundException(STUDENT_NOT_EXISTS.formatted(id));
-        }
-
+        existsById(id);
         studentRepository.deleteById(id);
     }
 

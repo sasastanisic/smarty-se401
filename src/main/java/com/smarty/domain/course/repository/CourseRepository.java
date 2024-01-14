@@ -9,4 +9,6 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     boolean existsByCode(String code);
 
+    boolean existsByYear(int year);
+
 }

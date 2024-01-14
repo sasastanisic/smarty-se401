@@ -8,6 +8,8 @@ import com.smarty.domain.student.entity.Student;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface ExamService {
 
     ExamResponseDTO createExam(ExamRequestDTO examRequestDTO);
@@ -19,6 +21,12 @@ public interface ExamService {
     Page<ExamResponseDTO> getAllExams(Pageable pageable);
 
     ExamResponseDTO getExamById(Long id);
+
+    List<ExamResponseDTO> getExamHistoryByStudent(Long studentId);
+
+    List<ExamResponseDTO> getExamHistoryByCourse(Long courseId);
+
+    List<ExamResponseDTO> getPassedExamsByStudent(Long studentId, int year);
 
     ExamResponseDTO updateExam(Long id, ExamUpdateDTO examUpdateDTO);
 

@@ -90,6 +90,16 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
+    public void existsByYear(int year) {
+        int minYear = 1;
+        int maxYear = 4;
+
+        if (!courseRepository.existsByYear(year) && (year < minYear || year > maxYear)) {
+            throw new NotFoundException("Year %d doesn't exist during the studies".formatted(year));
+        }
+    }
+
+    @Override
     public CourseResponseDTO updateCourse(Long id, CourseUpdateDTO courseUpdateDTO) {
         Course course = getById(id);
         courseMapper.updateCourseFromDTO(courseUpdateDTO, course);
