@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS `report` (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    course VARCHAR(100) NOT NULL,
+    term VARCHAR(100) NOT NULL,
+    description VARCHAR(3000) NOT NULL,
+    PRIMARY KEY (id)
+);
