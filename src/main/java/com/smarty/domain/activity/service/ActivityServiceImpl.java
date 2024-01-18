@@ -5,6 +5,7 @@ import com.smarty.domain.activity.model.ActivityRequestDTO;
 import com.smarty.domain.activity.model.ActivityResponseDTO;
 import com.smarty.domain.activity.model.ActivityUpdateDTO;
 import com.smarty.domain.activity.repository.ActivityRepository;
+import com.smarty.domain.course.service.CourseService;
 import com.smarty.domain.exam.service.ExamService;
 import com.smarty.domain.student.service.StudentService;
 import com.smarty.domain.task.enums.Type;
@@ -18,6 +19,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class ActivityServiceImpl implements ActivityService {
 
@@ -27,17 +30,20 @@ public class ActivityServiceImpl implements ActivityService {
     private final ActivityMapper activityMapper;
     private final TaskService taskService;
     private final StudentService studentService;
+    private final CourseService courseService;
     private final ExamService examService;
 
     public ActivityServiceImpl(ActivityRepository activityRepository,
                                ActivityMapper activityMapper,
                                TaskService taskService,
                                StudentService studentService,
+                               CourseService courseService,
                                @Lazy ExamService examService) {
         this.activityRepository = activityRepository;
         this.activityMapper = activityMapper;
         this.taskService = taskService;
         this.studentService = studentService;
+        this.courseService = courseService;
         this.examService = examService;
     }
 
@@ -46,13 +52,14 @@ public class ActivityServiceImpl implements ActivityService {
         Activity activity = activityMapper.toActivity(activityRequestDTO);
         var task = taskService.getById(activityRequestDTO.taskId());
         var student = studentService.getById(activityRequestDTO.studentId());
+        var course = courseService.getById(task.getCourse().getId());
 
-        examService.checkCourseAndStudentYear(student, task.getCourse());
-        examService.isExamAlreadyPassed(student, task.getCourse());
+        examService.checkCourseAndStudentYear(student, course);
+        examService.isExamAlreadyPassed(student, course);
 
         validateActivityNameForStudent(activityRequestDTO.activityName(), activityRequestDTO.studentId());
         validateActivityPoints(activityRequestDTO.points(), task.getMaxPoints());
-        validateNumberOfActivitiesByTaskType(String.valueOf(task.getType()), activityRequestDTO.studentId(), task.getCourse().getId(), task.getNumberOfTasks());
+        validateNumberOfActivitiesByTaskType(String.valueOf(task.getType()), activityRequestDTO.studentId(), course.getId(), task.getNumberOfTasks());
 
         activity.setTask(task);
         activity.setStudent(student);
@@ -93,6 +100,22 @@ public class ActivityServiceImpl implements ActivityService {
 
     private Activity getById(Long id) {
         return activityRepository.findById(id).orElseThrow(() -> new NotFoundException(ACTIVITY_NOT_EXISTS.formatted(id)));
+    }
+
+    @Override
+    public List<ActivityResponseDTO> getStudentActivitiesByCourse(Long studentId, String code) {
+        List<Activity> studentActivitiesByCourse = activityRepository.findStudentActivitiesByCourse(studentId, code);
+        studentService.existsById(studentId);
+        courseService.existsByCode(code);
+
+        if (studentActivitiesByCourse.isEmpty()) {
+            throw new NotFoundException("There are 0 activities by course %s for student with id %d".formatted(code, studentId));
+        }
+
+        return studentActivitiesByCourse
+                .stream()
+                .map(activityMapper::toActivityResponseDTO)
+                .toList();
     }
 
     @Override

@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/activities")
 public class ActivityController {
@@ -34,6 +36,11 @@ public class ActivityController {
     @GetMapping("/{id}")
     public ResponseEntity<ActivityResponseDTO> getActivityById(@PathVariable Long id) {
         return ResponseEntity.ok(activityService.getActivityById(id));
+    }
+
+    @GetMapping("/by-course-of-student/{studentId}")
+    public ResponseEntity<List<ActivityResponseDTO>> getStudentActivitiesByCourse(@PathVariable Long studentId, @RequestParam String code) {
+        return ResponseEntity.ok(activityService.getStudentActivitiesByCourse(studentId, code));
     }
 
     @PutMapping("/{id}")

@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -63,6 +64,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleArgumentTypeMismatchException() {
         HttpStatus status = HttpStatus.BAD_REQUEST;
         ApiErrorResponse response = new ApiErrorResponse("The provided path argument is not a valid type", status, ZonedDateTime.now());
+
+        return new ResponseEntity<>(response, status);
+    }
+
+    @ExceptionHandler(value = {MissingServletRequestParameterException.class})
+    public ResponseEntity<ApiErrorResponse> handleMissingParameterException(Exception e) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ApiErrorResponse response = new ApiErrorResponse(e.getMessage(), status, ZonedDateTime.now());
 
         return new ResponseEntity<>(response, status);
     }
