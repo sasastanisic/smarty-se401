@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/professors")
 public class ProfessorController {
@@ -35,6 +37,16 @@ public class ProfessorController {
     @GetMapping("/{id}")
     public ResponseEntity<ProfessorResponseDTO> getProfessorById(@PathVariable Long id) {
         return ResponseEntity.ok(professorService.getProfessorById(id));
+    }
+
+    @GetMapping("/by-email")
+    public ResponseEntity<ProfessorResponseDTO> getProfessorByEmail(@RequestParam String email) {
+        return ResponseEntity.ok(professorService.getProfessorByEmail(email));
+    }
+
+    @GetMapping("/by-course/{courseId}")
+    public ResponseEntity<List<ProfessorResponseDTO>> getProfessorsByCourse(@PathVariable Long courseId) {
+        return ResponseEntity.ok(professorService.getProfessorsByCourse(courseId));
     }
 
     @PutMapping("/{id}")

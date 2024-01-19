@@ -11,6 +11,7 @@ import com.smarty.infrastructure.exception.exceptions.BadRequestException;
 import com.smarty.infrastructure.exception.exceptions.ConflictException;
 import com.smarty.infrastructure.exception.exceptions.NotFoundException;
 import com.smarty.infrastructure.mapper.CourseMapper;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,7 @@ public class CourseServiceImpl implements CourseService {
 
     public CourseServiceImpl(CourseRepository courseRepository,
                              CourseMapper courseMapper,
-                             ProfessorService professorService,
+                             @Lazy ProfessorService professorService,
                              StudentService studentService) {
         this.courseRepository = courseRepository;
         this.courseMapper = courseMapper;
