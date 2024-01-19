@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/courses")
 public class CourseController {
@@ -34,6 +36,26 @@ public class CourseController {
     @GetMapping("/{id}")
     public ResponseEntity<CourseResponseDTO> getCourseById(@PathVariable Long id) {
         return ResponseEntity.ok(courseService.getCourseById(id));
+    }
+
+    @GetMapping("/by-year")
+    public ResponseEntity<List<CourseResponseDTO>> getCoursesByYear(@RequestParam int year) {
+        return ResponseEntity.ok(courseService.getCoursesByYear(year));
+    }
+
+    @GetMapping("/by-semester")
+    public ResponseEntity<List<CourseResponseDTO>> getCoursesBySemester(@RequestParam int semester) {
+        return ResponseEntity.ok(courseService.getCoursesBySemester(semester));
+    }
+
+    @GetMapping("/by-professor/{professorId}")
+    public ResponseEntity<List<CourseResponseDTO>> getCoursesByProfessor(@PathVariable Long professorId) {
+        return ResponseEntity.ok(courseService.getCoursesByProfessor(professorId));
+    }
+
+    @GetMapping("/by-student/{studentId}")
+    public ResponseEntity<List<CourseResponseDTO>> getCoursesByStudent(@PathVariable Long studentId) {
+        return ResponseEntity.ok(courseService.getCoursesByStudent(studentId));
     }
 
     @PutMapping("/{id}")

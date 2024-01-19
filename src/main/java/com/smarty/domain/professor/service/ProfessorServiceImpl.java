@@ -74,6 +74,13 @@ public class ProfessorServiceImpl implements ProfessorService {
     }
 
     @Override
+    public void existsById(Long id) {
+        if (!professorRepository.existsById(id)) {
+            throw new NotFoundException(PROFESSOR_NOT_EXISTS.formatted(id));
+        }
+    }
+
+    @Override
     public ProfessorResponseDTO updateProfessor(Long id, ProfessorUpdateDTO professorUpdateDTO) {
         Professor professor = getById(id);
         professorMapper.updateProfessorFromDTO(professorUpdateDTO, professor);
@@ -103,10 +110,7 @@ public class ProfessorServiceImpl implements ProfessorService {
 
     @Override
     public void deleteProfessor(Long id) {
-        if (!professorRepository.existsById(id)) {
-            throw new NotFoundException(PROFESSOR_NOT_EXISTS.formatted(id));
-        }
-
+        existsById(id);
         professorRepository.deleteById(id);
     }
 

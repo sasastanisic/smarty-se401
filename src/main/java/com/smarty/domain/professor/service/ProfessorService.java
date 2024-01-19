@@ -18,6 +18,8 @@ public interface ProfessorService {
 
     Professor getById(Long id);
 
+    void existsById(Long id);
+
     ProfessorResponseDTO updateProfessor(Long id, ProfessorUpdateDTO professorUpdateDTO);
 
     ProfessorResponseDTO updatePassword(Long id, PasswordUpdateDTO passwordUpdateDTO);

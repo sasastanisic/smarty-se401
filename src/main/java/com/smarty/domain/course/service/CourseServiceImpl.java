@@ -5,6 +5,8 @@ import com.smarty.domain.course.model.CourseRequestDTO;
 import com.smarty.domain.course.model.CourseResponseDTO;
 import com.smarty.domain.course.model.CourseUpdateDTO;
 import com.smarty.domain.course.repository.CourseRepository;
+import com.smarty.domain.professor.service.ProfessorService;
+import com.smarty.domain.student.service.StudentService;
 import com.smarty.infrastructure.exception.exceptions.BadRequestException;
 import com.smarty.infrastructure.exception.exceptions.ConflictException;
 import com.smarty.infrastructure.exception.exceptions.NotFoundException;
@@ -13,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -24,10 +27,17 @@ public class CourseServiceImpl implements CourseService {
 
     private final CourseRepository courseRepository;
     private final CourseMapper courseMapper;
+    private final ProfessorService professorService;
+    private final StudentService studentService;
 
-    public CourseServiceImpl(CourseRepository courseRepository, CourseMapper courseMapper) {
+    public CourseServiceImpl(CourseRepository courseRepository,
+                             CourseMapper courseMapper,
+                             ProfessorService professorService,
+                             StudentService studentService) {
         this.courseRepository = courseRepository;
         this.courseMapper = courseMapper;
+        this.professorService = professorService;
+        this.studentService = studentService;
     }
 
     @Override
@@ -104,6 +114,70 @@ public class CourseServiceImpl implements CourseService {
         if (!courseRepository.existsByYear(year) && (year < minYear || year > maxYear)) {
             throw new NotFoundException("Year %d doesn't exist during the studies".formatted(year));
         }
+    }
+
+    private void existsBySemester(int semester) {
+        int minSemester = 1;
+        int maxSemester = 8;
+
+        if (!courseRepository.existsBySemester(semester) && (semester < minSemester || semester > maxSemester)) {
+            throw new NotFoundException("Semester %d doesn't exist during the studies".formatted(semester));
+        }
+    }
+
+    @Override
+    public List<CourseResponseDTO> getCoursesByYear(int year) {
+        List<Course> coursesByYear = courseRepository.findByYear(year);
+        existsByYear(year);
+
+        if (coursesByYear.isEmpty()) {
+            throw new NotFoundException("List of courses by year is empty");
+        }
+
+        return getCourseListResponseDTO(coursesByYear);
+    }
+
+    @Override
+    public List<CourseResponseDTO> getCoursesBySemester(int semester) {
+        List<Course> coursesBySemester = courseRepository.findBySemester(semester);
+        existsBySemester(semester);
+
+        if (coursesBySemester.isEmpty()) {
+            throw new NotFoundException("List of courses by semester is empty");
+        }
+
+        return getCourseListResponseDTO(coursesBySemester);
+    }
+
+    @Override
+    public List<CourseResponseDTO> getCoursesByProfessor(Long professorId) {
+        List<Course> coursesByProfessor = courseRepository.findCoursesByProfessor(professorId);
+        professorService.existsById(professorId);
+
+        if (coursesByProfessor.isEmpty()) {
+            throw new NotFoundException("List of courses by professor is empty");
+        }
+
+        return getCourseListResponseDTO(coursesByProfessor);
+    }
+
+    @Override
+    public List<CourseResponseDTO> getCoursesByStudent(Long studentId) {
+        List<Course> coursesByStudent = courseRepository.findCoursesByStudent(studentId);
+        studentService.existsById(studentId);
+
+        if (coursesByStudent.isEmpty()) {
+            throw new NotFoundException("List of courses by student is empty");
+        }
+
+        return getCourseListResponseDTO(coursesByStudent);
+    }
+
+    private List<CourseResponseDTO> getCourseListResponseDTO(List<Course> courseList) {
+        return courseList
+                .stream()
+                .map(courseMapper::toCourseResponseDTO)
+                .toList();
     }
 
     @Override
