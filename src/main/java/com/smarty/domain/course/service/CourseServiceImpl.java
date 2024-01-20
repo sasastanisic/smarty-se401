@@ -34,7 +34,7 @@ public class CourseServiceImpl implements CourseService {
     public CourseServiceImpl(CourseRepository courseRepository,
                              CourseMapper courseMapper,
                              @Lazy ProfessorService professorService,
-                             StudentService studentService) {
+                             @Lazy StudentService studentService) {
         this.courseRepository = courseRepository;
         this.courseMapper = courseMapper;
         this.professorService = professorService;

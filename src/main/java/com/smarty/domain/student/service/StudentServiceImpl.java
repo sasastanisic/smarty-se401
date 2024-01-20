@@ -3,6 +3,7 @@ package com.smarty.domain.student.service;
 import com.smarty.domain.account.enums.Role;
 import com.smarty.domain.account.model.PasswordUpdateDTO;
 import com.smarty.domain.account.service.AccountService;
+import com.smarty.domain.course.service.CourseService;
 import com.smarty.domain.major.service.MajorService;
 import com.smarty.domain.status.service.StatusService;
 import com.smarty.domain.student.entity.Student;
@@ -14,6 +15,7 @@ import com.smarty.infrastructure.exception.exceptions.BadRequestException;
 import com.smarty.infrastructure.exception.exceptions.ConflictException;
 import com.smarty.infrastructure.exception.exceptions.NotFoundException;
 import com.smarty.infrastructure.mapper.StudentMapper;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -32,17 +34,20 @@ public class StudentServiceImpl implements StudentService {
     private final AccountService accountService;
     private final MajorService majorService;
     private final StatusService statusService;
+    private final CourseService courseService;
 
     public StudentServiceImpl(StudentRepository studentRepository,
                               StudentMapper studentMapper,
                               AccountService accountService,
                               MajorService majorService,
-                              StatusService statusService) {
+                              StatusService statusService,
+                              @Lazy CourseService courseService) {
         this.studentRepository = studentRepository;
         this.studentMapper = studentMapper;
         this.accountService = accountService;
         this.majorService = majorService;
         this.statusService = statusService;
+        this.courseService = courseService;
     }
 
     @Override
@@ -105,10 +110,64 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    public StudentResponseDTO getStudentByEmail(String email) {
+        Student student = studentRepository.findByAccount_Email(email);
+
+        if (student == null) {
+            throw new NotFoundException("Student with email %s doesn't exist".formatted(email));
+        }
+
+        return studentMapper.toStudentResponseDTO(student);
+    }
+
+    @Override
     public void existsById(Long id) {
         if (!studentRepository.existsById(id)) {
             throw new NotFoundException(STUDENT_NOT_EXISTS.formatted(id));
         }
+    }
+
+    @Override
+    public List<StudentResponseDTO> getStudentsByMajor(Long majorId) {
+        List<Student> studentsByMajor = studentRepository.findStudentsByMajor_Id(majorId);
+        majorService.existsById(majorId);
+
+        if (studentsByMajor.isEmpty()) {
+            throw new NotFoundException("List of students by major is empty");
+        }
+
+        return getStudentListResponseDTO(studentsByMajor);
+    }
+
+    @Override
+    public List<StudentResponseDTO> getStudentsByStudyStatus(Long statusId) {
+        List<Student> studentsByStudyStatus = studentRepository.findStudentsByStatus_Id(statusId);
+        statusService.existsById(statusId);
+
+        if (studentsByStudyStatus.isEmpty()) {
+            throw new NotFoundException("List of students by study status is empty");
+        }
+
+        return getStudentListResponseDTO(studentsByStudyStatus);
+    }
+
+    @Override
+    public List<StudentResponseDTO> getStudentsWhoPassedCertainCourse(Long courseId) {
+        List<Student> studentsWhoPassedCertainCourse = studentRepository.findStudentsWhoPassedCertainCourse(courseId);
+        courseService.existsById(courseId);
+
+        if (studentsWhoPassedCertainCourse.isEmpty()) {
+            throw new NotFoundException("There are 0 students that passed course with id %d".formatted(courseId));
+        }
+
+        return getStudentListResponseDTO(studentsWhoPassedCertainCourse);
+    }
+
+    private List<StudentResponseDTO> getStudentListResponseDTO(List<Student> studentList) {
+        return studentList
+                .stream()
+                .map(studentMapper::toStudentResponseDTO)
+                .toList();
     }
 
     @Override

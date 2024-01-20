@@ -8,6 +8,8 @@ import com.smarty.domain.student.model.StudentUpdateDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface StudentService {
 
     StudentResponseDTO createStudent(StudentRequestDTO studentRequestDTO);
@@ -18,7 +20,15 @@ public interface StudentService {
 
     Student getById(Long id);
 
+    StudentResponseDTO getStudentByEmail(String email);
+
     void existsById(Long id);
+
+    List<StudentResponseDTO> getStudentsByMajor(Long majorId);
+
+    List<StudentResponseDTO> getStudentsByStudyStatus(Long statusId);
+
+    List<StudentResponseDTO> getStudentsWhoPassedCertainCourse(Long courseId);
 
     StudentResponseDTO updateStudent(Long id, StudentUpdateDTO studentUpdateDTO);
 

@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/students")
 public class StudentController {
@@ -35,6 +37,26 @@ public class StudentController {
     @GetMapping("/{id}")
     public ResponseEntity<StudentResponseDTO> getStudentById(@PathVariable Long id) {
         return ResponseEntity.ok(studentService.getStudentById(id));
+    }
+
+    @GetMapping("/by-email")
+    public ResponseEntity<StudentResponseDTO> getStudentByEmail(@RequestParam String email) {
+        return ResponseEntity.ok(studentService.getStudentByEmail(email));
+    }
+
+    @GetMapping("/by-major/{majorId}")
+    public ResponseEntity<List<StudentResponseDTO>> getStudentsByMajor(@PathVariable Long majorId) {
+        return ResponseEntity.ok(studentService.getStudentsByMajor(majorId));
+    }
+
+    @GetMapping("/by-status/{statusId}")
+    public ResponseEntity<List<StudentResponseDTO>> getStudentsByStudyStatus(@PathVariable Long statusId) {
+        return ResponseEntity.ok(studentService.getStudentsByStudyStatus(statusId));
+    }
+
+    @GetMapping("/by-course-passed/{courseId}")
+    public ResponseEntity<List<StudentResponseDTO>> getStudentsWhoPassedCertainCourse(@PathVariable Long courseId) {
+        return ResponseEntity.ok(studentService.getStudentsWhoPassedCertainCourse(courseId));
     }
 
     @PutMapping("/{id}")
