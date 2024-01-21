@@ -171,6 +171,17 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    public Map<String, Object> getAverageGradeOfStudent(Long id) {
+        Student student = getById(id);
+        var averageGrade = studentRepository.findAverageGradeOfStudent(id);
+
+        return Map.of(
+                "student", studentMapper.toStudentResponseDTO(student),
+                "Student GPA", averageGrade == null ? 0.0 : averageGrade
+        );
+    }
+
+    @Override
     public StudentResponseDTO updateStudent(Long id, StudentUpdateDTO studentUpdateDTO) {
         Student student = getById(id);
         var major = majorService.getById(studentUpdateDTO.majorId());

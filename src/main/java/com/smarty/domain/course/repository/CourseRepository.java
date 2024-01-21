@@ -30,6 +30,6 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
             "JOIN exam e ON c.id = e.course.id " +
             "JOIN student s ON e.student.id = s.id " +
             "WHERE c.year <= s.year")
-    List<Course> findCoursesByStudent(Long studentId);
+    List<Course> findTakenCoursesByStudent(Long studentId);
 
 }

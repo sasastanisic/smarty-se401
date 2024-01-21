@@ -163,8 +163,8 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public List<CourseResponseDTO> getCoursesByStudent(Long studentId) {
-        List<Course> coursesByStudent = courseRepository.findCoursesByStudent(studentId);
+    public List<CourseResponseDTO> getTakenCoursesByStudent(Long studentId) {
+        List<Course> coursesByStudent = courseRepository.findTakenCoursesByStudent(studentId);
         studentService.existsById(studentId);
 
         if (coursesByStudent.isEmpty()) {

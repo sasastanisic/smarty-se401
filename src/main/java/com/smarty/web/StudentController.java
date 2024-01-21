@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/students")
@@ -57,6 +58,11 @@ public class StudentController {
     @GetMapping("/by-course-passed/{courseId}")
     public ResponseEntity<List<StudentResponseDTO>> getStudentsWhoPassedCertainCourse(@PathVariable Long courseId) {
         return ResponseEntity.ok(studentService.getStudentsWhoPassedCertainCourse(courseId));
+    }
+
+    @GetMapping("/average-grade/{id}")
+    public ResponseEntity<Map<String, Object>> getAverageGradeOfStudent(@PathVariable Long id) {
+        return ResponseEntity.ok(studentService.getAverageGradeOfStudent(id));
     }
 
     @PutMapping("/{id}")

@@ -31,7 +31,7 @@ public interface CourseService {
 
     List<CourseResponseDTO> getCoursesByProfessor(Long professorId);
 
-    List<CourseResponseDTO> getCoursesByStudent(Long studentId);
+    List<CourseResponseDTO> getTakenCoursesByStudent(Long studentId);
 
     CourseResponseDTO updateCourse(Long id, CourseUpdateDTO courseUpdateDTO);
 
