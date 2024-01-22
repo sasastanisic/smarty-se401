@@ -20,3 +20,9 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+
+# JWT TOKEN
+app:
+  jwt:
+    secret-key: secret
+    expiration: 1800000

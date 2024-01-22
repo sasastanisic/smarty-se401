@@ -177,7 +177,7 @@ public class StudentServiceImpl implements StudentService {
 
         return Map.of(
                 "student", studentMapper.toStudentResponseDTO(student),
-                "Student GPA", averageGrade == null ? 0.0 : averageGrade
+                "student's GPA", averageGrade == null ? 0.0 : averageGrade
         );
     }
 

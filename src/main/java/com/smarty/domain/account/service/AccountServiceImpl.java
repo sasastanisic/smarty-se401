@@ -1,8 +1,11 @@
 package com.smarty.domain.account.service;
 
+import com.smarty.domain.account.entity.Account;
 import com.smarty.domain.account.repository.AccountRepository;
 import com.smarty.infrastructure.exception.exceptions.ConflictException;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class AccountServiceImpl implements AccountService {
@@ -11,6 +14,11 @@ public class AccountServiceImpl implements AccountService {
 
     public AccountServiceImpl(AccountRepository accountRepository) {
         this.accountRepository = accountRepository;
+    }
+
+    @Override
+    public Optional<Account> getAccountByEmail(String email) {
+        return accountRepository.findByEmail(email);
     }
 
     @Override
