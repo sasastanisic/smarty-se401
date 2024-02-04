@@ -15,9 +15,12 @@ import com.smarty.infrastructure.exception.exceptions.BadRequestException;
 import com.smarty.infrastructure.exception.exceptions.ConflictException;
 import com.smarty.infrastructure.exception.exceptions.NotFoundException;
 import com.smarty.infrastructure.mapper.StudentMapper;
+import com.smarty.infrastructure.security.service.AuthenticationService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -35,19 +38,23 @@ public class StudentServiceImpl implements StudentService {
     private final MajorService majorService;
     private final StatusService statusService;
     private final CourseService courseService;
+    private final AuthenticationService authenticationService;
+    private PasswordEncoder passwordEncoder;
 
     public StudentServiceImpl(StudentRepository studentRepository,
                               StudentMapper studentMapper,
                               AccountService accountService,
                               MajorService majorService,
                               StatusService statusService,
-                              @Lazy CourseService courseService) {
+                              @Lazy CourseService courseService,
+                              AuthenticationService authenticationService) {
         this.studentRepository = studentRepository;
         this.studentMapper = studentMapper;
         this.accountService = accountService;
         this.majorService = majorService;
         this.statusService = statusService;
         this.courseService = courseService;
+        this.authenticationService = authenticationService;
     }
 
     @Override
@@ -55,17 +62,23 @@ public class StudentServiceImpl implements StudentService {
         Student student = studentMapper.toStudent(studentRequestDTO);
         var major = majorService.getById(studentRequestDTO.majorId());
         var status = statusService.getStatusById(studentRequestDTO.statusId());
+        var encryptedPassword = encodePassword(studentRequestDTO.account().password());
 
         validateIndex(studentRequestDTO.index());
         validateYearAndSemester(studentRequestDTO.year(), studentRequestDTO.semester());
         accountService.validateEmail(studentRequestDTO.account().email());
 
+        student.getAccount().setPassword(encryptedPassword);
         student.getAccount().setRole(Role.STUDENT);
         student.setMajor(major);
         student.setStatus(status);
         studentRepository.save(student);
 
         return studentMapper.toStudentResponseDTO(student);
+    }
+
+    private String encodePassword(String password) {
+        return passwordEncoder.encode(password);
     }
 
     private void validateIndex(int index) {
@@ -199,9 +212,11 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public StudentResponseDTO updatePassword(Long id, PasswordUpdateDTO passwordUpdateDTO) {
         Student student = getById(id);
+        var encryptedPassword = encodePassword(passwordUpdateDTO.password());
 
+        authenticationService.canUpdatePassword(student.getAccount().getEmail());
         arePasswordsMatching(passwordUpdateDTO.password(), passwordUpdateDTO.confirmedPassword());
-        student.getAccount().setPassword(passwordUpdateDTO.password());
+        student.getAccount().setPassword(encryptedPassword);
         studentRepository.save(student);
 
         return studentMapper.toStudentResponseDTO(student);
@@ -217,6 +232,11 @@ public class StudentServiceImpl implements StudentService {
     public void deleteStudent(Long id) {
         existsById(id);
         studentRepository.deleteById(id);
+    }
+
+    @Autowired
+    public void setPasswordEncoder(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
     }
 
 }

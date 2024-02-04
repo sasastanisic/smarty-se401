@@ -12,9 +12,12 @@ import com.smarty.domain.professor.repository.ProfessorRepository;
 import com.smarty.infrastructure.exception.exceptions.BadRequestException;
 import com.smarty.infrastructure.exception.exceptions.NotFoundException;
 import com.smarty.infrastructure.mapper.ProfessorMapper;
+import com.smarty.infrastructure.security.service.AuthenticationService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,26 +32,36 @@ public class ProfessorServiceImpl implements ProfessorService {
     private final ProfessorMapper professorMapper;
     private final AccountService accountService;
     private final CourseService courseService;
+    private final AuthenticationService authenticationService;
+    private PasswordEncoder passwordEncoder;
 
     public ProfessorServiceImpl(ProfessorRepository professorRepository,
                                 ProfessorMapper professorMapper,
                                 AccountService accountService,
-                                @Lazy CourseService courseService) {
+                                @Lazy CourseService courseService,
+                                AuthenticationService authenticationService) {
         this.professorRepository = professorRepository;
         this.professorMapper = professorMapper;
         this.accountService = accountService;
         this.courseService = courseService;
+        this.authenticationService = authenticationService;
     }
 
     @Override
     public ProfessorResponseDTO createProfessor(ProfessorRequestDTO professorRequestDTO) {
         Professor professor = professorMapper.toProfessor(professorRequestDTO);
+        var encryptedPassword = encodePassword(professorRequestDTO.account().password());
 
         accountService.validateEmail(professorRequestDTO.account().email());
+        professor.getAccount().setPassword(encryptedPassword);
         professor.getAccount().setRole(validateRole(professorRequestDTO.role()));
         professorRepository.save(professor);
 
         return professorMapper.toProfessorResponseDTO(professor);
+    }
+
+    private String encodePassword(String password) {
+        return passwordEncoder.encode(password);
     }
 
     private Role validateRole(String role) {
@@ -126,9 +139,11 @@ public class ProfessorServiceImpl implements ProfessorService {
     @Override
     public ProfessorResponseDTO updatePassword(Long id, PasswordUpdateDTO passwordUpdateDTO) {
         Professor professor = getById(id);
+        var encryptedPassword = encodePassword(passwordUpdateDTO.password());
 
+        authenticationService.canUpdatePassword(professor.getAccount().getEmail());
         arePasswordsMatching(passwordUpdateDTO.password(), passwordUpdateDTO.confirmedPassword());
-        professor.getAccount().setPassword(passwordUpdateDTO.password());
+        professor.getAccount().setPassword(encryptedPassword);
         professorRepository.save(professor);
 
         return professorMapper.toProfessorResponseDTO(professor);
@@ -144,6 +159,11 @@ public class ProfessorServiceImpl implements ProfessorService {
     public void deleteProfessor(Long id) {
         existsById(id);
         professorRepository.deleteById(id);
+    }
+
+    @Autowired
+    public void setPasswordEncoder(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
     }
 
 }

@@ -1,11 +1,15 @@
 package com.smarty.infrastructure.security.service;
 
 import com.smarty.domain.account.service.AccountService;
+import com.smarty.infrastructure.exception.exceptions.ForbiddenException;
 import com.smarty.infrastructure.exception.exceptions.NotFoundException;
 import com.smarty.infrastructure.security.model.AuthenticatedUser;
 import com.smarty.infrastructure.security.model.LoginRequestDTO;
 import com.smarty.infrastructure.security.model.LoginResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -43,6 +47,17 @@ public class AuthenticationService implements UserDetailsService {
         }
 
         return new LoginResponseDTO(jwtUtil.createToken(authenticatedUser));
+    }
+
+    public void canUpdatePassword(String accountEmail) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (!(authentication instanceof AnonymousAuthenticationToken)) {
+            String loggedInAccount = authentication.getName();
+            if (!loggedInAccount.equals(accountEmail)) {
+                throw new ForbiddenException("You don't have permission to update password");
+            }
+        }
     }
 
     @Autowired
