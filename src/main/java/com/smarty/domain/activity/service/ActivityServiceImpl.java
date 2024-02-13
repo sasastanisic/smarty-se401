@@ -10,6 +10,7 @@ import com.smarty.domain.exam.service.ExamService;
 import com.smarty.domain.student.service.StudentService;
 import com.smarty.domain.task.enums.Type;
 import com.smarty.domain.task.service.TaskService;
+import com.smarty.infrastructure.email.EmailSender;
 import com.smarty.infrastructure.exception.exceptions.ConflictException;
 import com.smarty.infrastructure.exception.exceptions.ForbiddenException;
 import com.smarty.infrastructure.exception.exceptions.NotFoundException;
@@ -32,19 +33,22 @@ public class ActivityServiceImpl implements ActivityService {
     private final StudentService studentService;
     private final CourseService courseService;
     private final ExamService examService;
+    private final EmailSender emailSender;
 
     public ActivityServiceImpl(ActivityRepository activityRepository,
                                ActivityMapper activityMapper,
                                TaskService taskService,
                                StudentService studentService,
                                CourseService courseService,
-                               @Lazy ExamService examService) {
+                               @Lazy ExamService examService,
+                               EmailSender emailSender) {
         this.activityRepository = activityRepository;
         this.activityMapper = activityMapper;
         this.taskService = taskService;
         this.studentService = studentService;
         this.courseService = courseService;
         this.examService = examService;
+        this.emailSender = emailSender;
     }
 
     @Override
@@ -60,6 +64,8 @@ public class ActivityServiceImpl implements ActivityService {
         validateActivityNameForStudent(activityRequestDTO.activityName(), activityRequestDTO.studentId());
         validateActivityPoints(activityRequestDTO.points(), task.getMaxPoints());
         validateNumberOfActivitiesByTaskType(String.valueOf(task.getType()), activityRequestDTO.studentId(), course.getId(), task.getNumberOfTasks());
+
+        emailSender.sendEmail(student.getAccount().getEmail(), activityRequestDTO.activityName(), "Successful!");
 
         activity.setTask(task);
         activity.setStudent(student);
