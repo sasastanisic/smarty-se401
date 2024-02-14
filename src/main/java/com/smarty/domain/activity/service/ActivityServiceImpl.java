@@ -10,7 +10,7 @@ import com.smarty.domain.exam.service.ExamService;
 import com.smarty.domain.student.service.StudentService;
 import com.smarty.domain.task.enums.Type;
 import com.smarty.domain.task.service.TaskService;
-import com.smarty.infrastructure.email.EmailSender;
+import com.smarty.infrastructure.email.EmailNotificationService;
 import com.smarty.infrastructure.exception.exceptions.ConflictException;
 import com.smarty.infrastructure.exception.exceptions.ForbiddenException;
 import com.smarty.infrastructure.exception.exceptions.NotFoundException;
@@ -33,7 +33,7 @@ public class ActivityServiceImpl implements ActivityService {
     private final StudentService studentService;
     private final CourseService courseService;
     private final ExamService examService;
-    private final EmailSender emailSender;
+    private final EmailNotificationService emailNotificationService;
 
     public ActivityServiceImpl(ActivityRepository activityRepository,
                                ActivityMapper activityMapper,
@@ -41,14 +41,14 @@ public class ActivityServiceImpl implements ActivityService {
                                StudentService studentService,
                                CourseService courseService,
                                @Lazy ExamService examService,
-                               EmailSender emailSender) {
+                               EmailNotificationService emailNotificationService) {
         this.activityRepository = activityRepository;
         this.activityMapper = activityMapper;
         this.taskService = taskService;
         this.studentService = studentService;
         this.courseService = courseService;
         this.examService = examService;
-        this.emailSender = emailSender;
+        this.emailNotificationService = emailNotificationService;
     }
 
     @Override
@@ -65,7 +65,8 @@ public class ActivityServiceImpl implements ActivityService {
         validateActivityPoints(activityRequestDTO.points(), task.getMaxPoints());
         validateNumberOfActivitiesByTaskType(String.valueOf(task.getType()), activityRequestDTO.studentId(), course.getId(), task.getNumberOfTasks());
 
-        emailSender.sendEmail(student.getAccount().getEmail(), activityRequestDTO.activityName(), "Successful!");
+        emailNotificationService.sendActivityNotification(student.getAccount().getEmail(), activityRequestDTO.activityName(), student.getName(),
+                activityRequestDTO.points(), course.getFullName());
 
         activity.setTask(task);
         activity.setStudent(student);
