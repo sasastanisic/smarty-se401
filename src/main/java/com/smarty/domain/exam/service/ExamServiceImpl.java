@@ -10,6 +10,7 @@ import com.smarty.domain.exam.model.ExamUpdateDTO;
 import com.smarty.domain.exam.repository.ExamRepository;
 import com.smarty.domain.student.entity.Student;
 import com.smarty.domain.student.service.StudentService;
+import com.smarty.infrastructure.email.EmailNotificationService;
 import com.smarty.infrastructure.exception.exceptions.BadRequestException;
 import com.smarty.infrastructure.exception.exceptions.ConflictException;
 import com.smarty.infrastructure.exception.exceptions.ForbiddenException;
@@ -34,17 +35,20 @@ public class ExamServiceImpl implements ExamService {
     private final StudentService studentService;
     private final CourseService courseService;
     private final ActivityService activityService;
+    private final EmailNotificationService emailNotificationService;
 
     public ExamServiceImpl(ExamRepository examRepository,
                            ExamMapper examMapper,
                            StudentService studentService,
                            CourseService courseService,
-                           @Lazy ActivityService activityService) {
+                           @Lazy ActivityService activityService,
+                           EmailNotificationService emailNotificationService) {
         this.examRepository = examRepository;
         this.examMapper = examMapper;
         this.studentService = studentService;
         this.courseService = courseService;
         this.activityService = activityService;
+        this.emailNotificationService = emailNotificationService;
     }
 
     @Override
@@ -62,6 +66,9 @@ public class ExamServiceImpl implements ExamService {
         validateTotalActivityPoints(examRequestDTO.studentId(), examRequestDTO.courseId());
         activityService.isProjectFinished(examRequestDTO.studentId());
         validateExaminationPeriod(examRequestDTO.examinationPeriod());
+
+        emailNotificationService.sendExamNotification(student.getAccount().getEmail(), course.getCode(), course.getFullName(),
+                student.getName(), examRequestDTO.points(), grade);
 
         exam.setGrade(grade);
         exam.setDateOfExamination(LocalDate.now());

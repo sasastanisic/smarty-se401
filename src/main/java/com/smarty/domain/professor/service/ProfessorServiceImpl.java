@@ -9,6 +9,7 @@ import com.smarty.domain.professor.model.ProfessorRequestDTO;
 import com.smarty.domain.professor.model.ProfessorResponseDTO;
 import com.smarty.domain.professor.model.ProfessorUpdateDTO;
 import com.smarty.domain.professor.repository.ProfessorRepository;
+import com.smarty.infrastructure.email.EmailNotificationService;
 import com.smarty.infrastructure.exception.exceptions.BadRequestException;
 import com.smarty.infrastructure.exception.exceptions.NotFoundException;
 import com.smarty.infrastructure.mapper.ProfessorMapper;
@@ -33,18 +34,21 @@ public class ProfessorServiceImpl implements ProfessorService {
     private final AccountService accountService;
     private final CourseService courseService;
     private final AuthenticationService authenticationService;
+    private final EmailNotificationService emailNotificationService;
     private PasswordEncoder passwordEncoder;
 
     public ProfessorServiceImpl(ProfessorRepository professorRepository,
                                 ProfessorMapper professorMapper,
                                 AccountService accountService,
                                 @Lazy CourseService courseService,
-                                AuthenticationService authenticationService) {
+                                AuthenticationService authenticationService,
+                                EmailNotificationService emailNotificationService) {
         this.professorRepository = professorRepository;
         this.professorMapper = professorMapper;
         this.accountService = accountService;
         this.courseService = courseService;
         this.authenticationService = authenticationService;
+        this.emailNotificationService = emailNotificationService;
     }
 
     @Override
@@ -53,6 +57,7 @@ public class ProfessorServiceImpl implements ProfessorService {
         var encryptedPassword = encodePassword(professorRequestDTO.account().password());
 
         accountService.validateEmail(professorRequestDTO.account().email());
+        emailNotificationService.sendConfirmation(professor.getAccount().getEmail(), professorRequestDTO.name());
         professor.getAccount().setPassword(encryptedPassword);
         professor.getAccount().setRole(validateRole(professorRequestDTO.role()));
         professorRepository.save(professor);

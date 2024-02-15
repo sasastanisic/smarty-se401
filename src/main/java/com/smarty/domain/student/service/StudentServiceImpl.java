@@ -11,6 +11,7 @@ import com.smarty.domain.student.model.StudentRequestDTO;
 import com.smarty.domain.student.model.StudentResponseDTO;
 import com.smarty.domain.student.model.StudentUpdateDTO;
 import com.smarty.domain.student.repository.StudentRepository;
+import com.smarty.infrastructure.email.EmailNotificationService;
 import com.smarty.infrastructure.exception.exceptions.BadRequestException;
 import com.smarty.infrastructure.exception.exceptions.ConflictException;
 import com.smarty.infrastructure.exception.exceptions.NotFoundException;
@@ -39,6 +40,7 @@ public class StudentServiceImpl implements StudentService {
     private final StatusService statusService;
     private final CourseService courseService;
     private final AuthenticationService authenticationService;
+    private final EmailNotificationService emailNotificationService;
     private PasswordEncoder passwordEncoder;
 
     public StudentServiceImpl(StudentRepository studentRepository,
@@ -47,7 +49,8 @@ public class StudentServiceImpl implements StudentService {
                               MajorService majorService,
                               StatusService statusService,
                               @Lazy CourseService courseService,
-                              AuthenticationService authenticationService) {
+                              AuthenticationService authenticationService,
+                              EmailNotificationService emailNotificationService) {
         this.studentRepository = studentRepository;
         this.studentMapper = studentMapper;
         this.accountService = accountService;
@@ -55,6 +58,7 @@ public class StudentServiceImpl implements StudentService {
         this.statusService = statusService;
         this.courseService = courseService;
         this.authenticationService = authenticationService;
+        this.emailNotificationService = emailNotificationService;
     }
 
     @Override
@@ -67,6 +71,8 @@ public class StudentServiceImpl implements StudentService {
         validateIndex(studentRequestDTO.index());
         validateYearAndSemester(studentRequestDTO.year(), studentRequestDTO.semester());
         accountService.validateEmail(studentRequestDTO.account().email());
+
+        emailNotificationService.sendConfirmation(student.getAccount().getEmail(), studentRequestDTO.name());
 
         student.getAccount().setPassword(encryptedPassword);
         student.getAccount().setRole(Role.STUDENT);
