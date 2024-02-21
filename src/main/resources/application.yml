@@ -40,5 +40,5 @@ spring:
 # JWT TOKEN
 app:
   jwt:
-    secret-key: secret
+    secret-key: 5zAq4kNp2fTg7yHd3mYsVx8lBv6cXjWn1bMe0rLf9tKi2oJu1hGy3bHv5nQp8tRi0cWq3zXr6kLm9oNp4sYv6hGy3bHv5nQ
     expiration: 1800000

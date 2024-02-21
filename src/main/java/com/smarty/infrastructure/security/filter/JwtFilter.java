@@ -21,7 +21,7 @@ import java.util.Set;
 public class JwtFilter extends OncePerRequestFilter {
 
     public static final String BEARER = "Bearer";
-    private final Set<String> excludedUrls = Set.of("/authenticate", "/v3/api-docs", "swagger-ui");
+    private final Set<String> excludedUrls = Set.of("/authenticate", "/v3/api-docs", "/swagger-ui");
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService authenticationService;

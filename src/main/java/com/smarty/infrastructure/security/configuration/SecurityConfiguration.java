@@ -18,12 +18,14 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfiguration {
 
-    private static final String AUTH_ENDPOINT = "/authenticate/**";
+    private final List<String> permittedEndpoints = List.of("/authenticate/**", "/v3/api-docs/**", "/swagger-ui/**");
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -35,7 +37,7 @@ public class SecurityConfiguration {
         return httpSecurity
                 .csrf().disable()
                 .cors().and()
-                .authorizeHttpRequests(request -> request.requestMatchers(AUTH_ENDPOINT).permitAll().anyRequest().authenticated())
+                .authorizeHttpRequests(request -> request.requestMatchers(permittedEndpoints.toArray(String[]::new)).permitAll().anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .build();
