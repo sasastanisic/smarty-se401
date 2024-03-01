@@ -103,9 +103,6 @@ public class CourseServiceImplTest {
         CourseRequestDTO courseRequestDTO = new CourseRequestDTO("IT355", "Web Systems 2", 8, 4, 6,
                 "Course about learning backend framework Spring and Spring Boot");
 
-        when(courseMapper.toCourse(courseRequestDTO)).thenReturn(course);
-        doReturn(false).when(courseRepository).existsByCode(courseRequestDTO.code());
-
         Assertions.assertThrows(BadRequestException.class, () -> courseService.createCourse(courseRequestDTO));
     }
 

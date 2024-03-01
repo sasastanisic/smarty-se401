@@ -9,6 +9,8 @@ import com.smarty.domain.task.model.TaskRequestDTO;
 import com.smarty.domain.task.model.TaskResponseDTO;
 import com.smarty.domain.task.model.TaskUpdateDTO;
 import com.smarty.domain.task.repository.TaskRepository;
+import com.smarty.infrastructure.exception.exceptions.ConflictException;
+import com.smarty.infrastructure.exception.exceptions.ForbiddenException;
 import com.smarty.infrastructure.exception.exceptions.NotFoundException;
 import com.smarty.infrastructure.mapper.TaskMapperImpl;
 import org.junit.jupiter.api.Assertions;
@@ -20,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -89,6 +92,95 @@ public class TaskServiceImplTest {
         var createdTaskDTO = taskService.createTask(taskRequestDTO);
 
         assertThat(taskResponseDTO).isEqualTo(createdTaskDTO);
+    }
+
+    @Test
+    void testTaskExistsByTypeAndCourseId() {
+        TaskRequestDTO taskRequestDTO = new TaskRequestDTO(String.valueOf(Type.HOMEWORK), 1.5, 15, 1L);
+
+        when(taskMapper.toTask(taskRequestDTO)).thenReturn(task);
+        doReturn(false).when(taskRepository).existsByTypeAndCourse_Id(Type.HOMEWORK, taskRequestDTO.courseId());
+
+        Assertions.assertDoesNotThrow(() -> taskService.createTask(taskRequestDTO));
+    }
+
+    @Test
+    void testTaskExistsByTypeAndCourseId_NotValid() {
+        TaskRequestDTO taskRequestDTO = new TaskRequestDTO(String.valueOf(Type.HOMEWORK), 1.5, 15, 1L);
+
+        when(taskMapper.toTask(taskRequestDTO)).thenReturn(task);
+        doReturn(true).when(taskRepository).existsByTypeAndCourse_Id(Type.HOMEWORK, taskRequestDTO.courseId());
+
+        Assertions.assertThrows(ConflictException.class, () -> taskService.createTask(taskRequestDTO));
+    }
+
+    @Test
+    void testTotalTaskPointsByCourse() {
+        TaskRequestDTO taskRequestDTO = new TaskRequestDTO(String.valueOf(Type.HOMEWORK), 1.5, 15, 1L);
+
+        when(taskMapper.toTask(taskRequestDTO)).thenReturn(task);
+        doReturn(false).when(taskRepository).existsByTypeAndCourse_Id(Type.HOMEWORK, taskRequestDTO.courseId());
+        doReturn(47.5).when(taskRepository).findTotalTaskPointsByCourse(taskRequestDTO.courseId());
+
+        Assertions.assertDoesNotThrow(() -> taskService.createTask(taskRequestDTO));
+    }
+
+    @Test
+    void testTotalTaskPointsByCourse_NotValid() {
+        TaskRequestDTO taskRequestDTO = new TaskRequestDTO(String.valueOf(Type.HOMEWORK), 1.5, 15, 1L);
+
+        when(taskMapper.toTask(taskRequestDTO)).thenReturn(task);
+        doReturn(false).when(taskRepository).existsByTypeAndCourse_Id(Type.HOMEWORK, taskRequestDTO.courseId());
+        doReturn(50.0).when(taskRepository).findTotalTaskPointsByCourse(taskRequestDTO.courseId());
+
+        Assertions.assertThrows(ForbiddenException.class, () -> taskService.createTask(taskRequestDTO));
+    }
+
+    @Test
+    void testGetAllTasks() {
+        Pageable pageable = mock(Pageable.class);
+        CourseResponseDTO courseResponseDTO = new CourseResponseDTO(1L, "IT355", "Web Systems 2", 8, 3, 6,
+                "Course about learning backend framework Spring and Spring Boot");
+        TaskResponseDTO taskResponseDTO = new TaskResponseDTO(1L, Type.HOMEWORK, 1.5, 15, courseResponseDTO);
+
+        when(taskMapper.toTaskResponseDTO(task)).thenReturn(taskResponseDTO);
+        var expectedTasks = tasks.map(task -> taskMapper.toTaskResponseDTO(task));
+        doReturn(tasks).when(taskRepository).findAll(pageable);
+        var taskPage = taskService.getAllTasks(pageable);
+
+        Assertions.assertEquals(expectedTasks, taskPage);
+
+        for (int i = 0; i < taskPage.getContent().size(); i++) {
+            compareTaskDTO(expectedTasks.getContent().get(i), taskPage.getContent().get(i));
+        }
+    }
+
+    private void compareTaskDTO(TaskResponseDTO expectedTask, TaskResponseDTO returnedTask) {
+        Assertions.assertEquals(expectedTask.id(), returnedTask.id());
+        Assertions.assertSame(expectedTask.type(), returnedTask.type());
+        Assertions.assertEquals(expectedTask.maxPoints(), returnedTask.maxPoints());
+        Assertions.assertEquals(expectedTask.numberOfTasks(), returnedTask.numberOfTasks());
+        Assertions.assertEquals(expectedTask.course(), returnedTask.course());
+    }
+
+    @Test
+    void testGetTaskById() {
+        CourseResponseDTO courseResponseDTO = new CourseResponseDTO(1L, "IT355", "Web Systems 2", 8, 3, 6,
+                "Course about learning backend framework Spring and Spring Boot");
+        TaskResponseDTO taskResponseDTO = new TaskResponseDTO(1L, Type.HOMEWORK, 1.5, 15, courseResponseDTO);
+
+        when(taskMapper.toTaskResponseDTO(task)).thenReturn(taskResponseDTO);
+        var expectedTask = taskMapper.toTaskResponseDTO(task);
+        doReturn(Optional.of(task)).when(taskRepository).findById(1L);
+        var returnedTask = taskService.getTaskById(1L);
+
+        Assertions.assertEquals(expectedTask, returnedTask);
+    }
+
+    @Test
+    void testGetTaskById_NotFound() {
+        doReturn(Optional.empty()).when(taskRepository).findById(1L);
+        Assertions.assertThrows(NotFoundException.class, () -> taskService.getTaskById(1L));
     }
 
     @Test
