@@ -184,6 +184,26 @@ public class TaskServiceImplTest {
     }
 
     @Test
+    void testGetTasksByCourse() {
+        List<Task> tasksByCourse = List.of(task);
+        CourseResponseDTO courseResponseDTO = new CourseResponseDTO(1L, "IT355", "Web Systems 2", 8, 3, 6,
+                "Course about learning backend framework Spring and Spring Boot");
+        TaskResponseDTO taskResponseDTO = new TaskResponseDTO(1L, Type.HOMEWORK, 1.5, 15, courseResponseDTO);
+
+        when(taskMapper.toTaskResponseDTO(task)).thenReturn(taskResponseDTO);
+        var expectedList = tasksByCourse
+                .stream()
+                .map(taskMapper::toTaskResponseDTO)
+                .toList();
+        doReturn(tasksByCourse).when(taskRepository).findByCourse_Id(course.getId());
+        var returnedList = taskService.getTasksByCourse(course.getId());
+
+        Assertions.assertTrue(tasksByCourse.contains(task));
+        Assertions.assertEquals(expectedList, returnedList);
+        Assertions.assertFalse(returnedList.isEmpty());
+    }
+
+    @Test
     void testUpdateTask() {
         TaskUpdateDTO taskUpdateDTO = new TaskUpdateDTO(2, 12);
         CourseResponseDTO courseResponseDTO = new CourseResponseDTO(1L, "IT355", "Web Systems 2", 8, 3, 6,
