@@ -5,6 +5,8 @@ import com.smarty.domain.account.enums.Role;
 import com.smarty.domain.account.model.AccountRequestDTO;
 import com.smarty.domain.account.model.AccountResponseDTO;
 import com.smarty.domain.account.service.AccountService;
+import com.smarty.domain.course.domain.Course;
+import com.smarty.domain.course.service.CourseService;
 import com.smarty.domain.major.entity.Major;
 import com.smarty.domain.major.model.MajorResponseDTO;
 import com.smarty.domain.major.service.MajorService;
@@ -13,6 +15,7 @@ import com.smarty.domain.status.service.StatusService;
 import com.smarty.domain.student.entity.Student;
 import com.smarty.domain.student.model.StudentRequestDTO;
 import com.smarty.domain.student.model.StudentResponseDTO;
+import com.smarty.domain.student.model.StudentUpdateDTO;
 import com.smarty.domain.student.repository.StudentRepository;
 import com.smarty.infrastructure.email.EmailNotificationService;
 import com.smarty.infrastructure.exception.exceptions.BadRequestException;
@@ -28,10 +31,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.*;
@@ -66,6 +71,9 @@ public class StudentServiceImplTest {
 
     @Mock
     StatusService statusService;
+
+    @Mock
+    CourseService courseService;
 
     @Mock
     EmailNotificationService emailNotificationService;
@@ -166,6 +174,80 @@ public class StudentServiceImplTest {
     }
 
     @Test
+    void testGetAllStudents() {
+        Pageable pageable = mock(Pageable.class);
+        AccountResponseDTO accountResponseDTO = new AccountResponseDTO("sasa.stanisic.4377@metropolitan.ac.rs", "@Password123$", Role.STUDENT);
+        StudentResponseDTO studentResponseDTO = new StudentResponseDTO(1L, "Sasa", "Stanisic", 4377, 4, 7, accountResponseDTO,
+                new MajorResponseDTO(1L, "SE", "Software engineering", "Software engineering major", 4),
+                new Status(1L, "Traditional"));
+
+        when(studentMapper.toStudentResponseDTO(student)).thenReturn(studentResponseDTO);
+        var expectedStudents = students.map(student -> studentMapper.toStudentResponseDTO(student));
+        doReturn(students).when(studentRepository).findAll(pageable);
+        var studentPage = studentService.getAllStudents(pageable);
+
+        Assertions.assertEquals(expectedStudents, studentPage);
+
+        for (var i = 0; i < studentPage.getContent().size(); i++) {
+            compareStudentDTO(expectedStudents.getContent().get(i), studentPage.getContent().get(i));
+        }
+    }
+
+    private void compareStudentDTO(StudentResponseDTO expectedStudent, StudentResponseDTO returnedStudent) {
+        Assertions.assertEquals(expectedStudent.id(), returnedStudent.id());
+        Assertions.assertSame(expectedStudent.name(), returnedStudent.name());
+        Assertions.assertSame(expectedStudent.surname(), returnedStudent.surname());
+        Assertions.assertEquals(expectedStudent.index(), returnedStudent.index());
+        Assertions.assertEquals(expectedStudent.year(), returnedStudent.year());
+        Assertions.assertEquals(expectedStudent.semester(), returnedStudent.semester());
+        Assertions.assertEquals(expectedStudent.account(), returnedStudent.account());
+        Assertions.assertEquals(expectedStudent.major(), returnedStudent.major());
+        Assertions.assertEquals(expectedStudent.status(), returnedStudent.status());
+    }
+
+    @Test
+    void testGetStudentById() {
+        AccountResponseDTO accountResponseDTO = new AccountResponseDTO("sasa.stanisic.4377@metropolitan.ac.rs", "@Password123$", Role.STUDENT);
+        StudentResponseDTO studentResponseDTO = new StudentResponseDTO(1L, "Sasa", "Stanisic", 4377, 4, 7, accountResponseDTO,
+                new MajorResponseDTO(1L, "SE", "Software engineering", "Software engineering major", 4),
+                new Status(1L, "Traditional"));
+
+        when(studentMapper.toStudentResponseDTO(student)).thenReturn(studentResponseDTO);
+        var expectedStudent = studentMapper.toStudentResponseDTO(student);
+        doReturn(Optional.of(student)).when(studentRepository).findById(1L);
+        var returnedStudent = studentService.getStudentById(1L);
+
+        Assertions.assertEquals(expectedStudent, returnedStudent);
+    }
+
+    @Test
+    void testGetStudentById_NotFound() {
+        doReturn(Optional.empty()).when(studentRepository).findById(1L);
+        Assertions.assertThrows(NotFoundException.class, () -> studentService.getStudentById(1L));
+    }
+
+    @Test
+    void testGetStudentByEmail() {
+        AccountResponseDTO accountResponseDTO = new AccountResponseDTO("sasa.stanisic.4377@metropolitan.ac.rs", "@Password123$", Role.STUDENT);
+        StudentResponseDTO studentResponseDTO = new StudentResponseDTO(1L, "Sasa", "Stanisic", 4377, 4, 7, accountResponseDTO,
+                new MajorResponseDTO(1L, "SE", "Software engineering", "Software engineering major", 4),
+                new Status(1L, "Traditional"));
+
+        when(studentMapper.toStudentResponseDTO(student)).thenReturn(studentResponseDTO);
+        var expectedStudent = studentMapper.toStudentResponseDTO(student);
+        doReturn(student).when(studentRepository).findByAccount_Email(student.getAccount().getEmail());
+        var returnedStudent = studentService.getStudentByEmail(student.getAccount().getEmail());
+
+        Assertions.assertEquals(expectedStudent, returnedStudent);
+    }
+
+    @Test
+    void testGetStudentByEmail_NotFound() {
+        doReturn(null).when(studentRepository).findByAccount_Email(student.getAccount().getEmail());
+        Assertions.assertThrows(NotFoundException.class, () -> studentService.getStudentByEmail(student.getAccount().getEmail()));
+    }
+
+    @Test
     void testStudentExists() {
         doReturn(true).when(studentRepository).existsById(1L);
         Assertions.assertDoesNotThrow(() -> studentService.existsById(1L));
@@ -176,6 +258,100 @@ public class StudentServiceImplTest {
     void testStudentExists_NotFound() {
         doReturn(false).when(studentRepository).existsById(1L);
         Assertions.assertThrows(NotFoundException.class, () -> studentService.existsById(1L));
+    }
+
+    @Test
+    void testGetStudentsByMajor() {
+        List<Student> studentsByMajor = List.of(student);
+        AccountResponseDTO accountResponseDTO = new AccountResponseDTO("sasa.stanisic.4377@metropolitan.ac.rs", "@Password123$", Role.STUDENT);
+        StudentResponseDTO studentResponseDTO = new StudentResponseDTO(1L, "Sasa", "Stanisic", 4377, 4, 7, accountResponseDTO,
+                new MajorResponseDTO(1L, "SE", "Software engineering", "Software engineering major", 4),
+                new Status(1L, "Traditional"));
+
+        when(studentMapper.toStudentResponseDTO(student)).thenReturn(studentResponseDTO);
+        var expectedList = getStudentListResponseDTO(studentsByMajor);
+        doReturn(studentsByMajor).when(studentRepository).findStudentsByMajor_Id(major.getId());
+        doNothing().when(majorService).existsById(major.getId());
+        var returnedList = studentService.getStudentsByMajor(major.getId());
+
+        Assertions.assertEquals(expectedList, returnedList);
+        Assertions.assertTrue(studentsByMajor.contains(student));
+    }
+
+    @Test
+    void testGetStudentsByStudyStatus() {
+        List<Student> studentsByStudyStatus = List.of(student);
+        AccountResponseDTO accountResponseDTO = new AccountResponseDTO("sasa.stanisic.4377@metropolitan.ac.rs", "@Password123$", Role.STUDENT);
+        StudentResponseDTO studentResponseDTO = new StudentResponseDTO(1L, "Sasa", "Stanisic", 4377, 4, 7, accountResponseDTO,
+                new MajorResponseDTO(1L, "SE", "Software engineering", "Software engineering major", 4),
+                new Status(1L, "Traditional"));
+
+        when(studentMapper.toStudentResponseDTO(student)).thenReturn(studentResponseDTO);
+        var expectedList = getStudentListResponseDTO(studentsByStudyStatus);
+        doReturn(studentsByStudyStatus).when(studentRepository).findStudentsByStatus_Id(status.getId());
+        doNothing().when(statusService).existsById(status.getId());
+        var returnedList = studentService.getStudentsByStudyStatus(status.getId());
+
+        Assertions.assertEquals(expectedList, returnedList);
+        Assertions.assertFalse(returnedList.isEmpty());
+    }
+
+    @Test
+    void testGetStudentsWhoPassedCertainCourse() {
+        List<Student> studentsWhoPassedCertainCourse = List.of(student);
+        AccountResponseDTO accountResponseDTO = new AccountResponseDTO("sasa.stanisic.4377@metropolitan.ac.rs", "@Password123$", Role.STUDENT);
+        StudentResponseDTO studentResponseDTO = new StudentResponseDTO(1L, "Sasa", "Stanisic", 4377, 4, 7, accountResponseDTO,
+                new MajorResponseDTO(1L, "SE", "Software engineering", "Software engineering major", 4),
+                new Status(1L, "Traditional"));
+
+        when(studentMapper.toStudentResponseDTO(student)).thenReturn(studentResponseDTO);
+        var expectedList = getStudentListResponseDTO(studentsWhoPassedCertainCourse);
+        doReturn(studentsWhoPassedCertainCourse).when(studentRepository).findStudentsWhoPassedCertainCourse(new Course().getId());
+        doNothing().when(courseService).existsById(new Course().getId());
+        var returnedList = studentService.getStudentsWhoPassedCertainCourse(new Course().getId());
+
+        assertThat(expectedList).isEqualTo(returnedList);
+    }
+
+    private List<StudentResponseDTO> getStudentListResponseDTO(List<Student> studentList) {
+        return studentList
+                .stream()
+                .map(studentMapper::toStudentResponseDTO)
+                .toList();
+    }
+    // TODO: averageGradeOfStudent, updatePassword
+
+    @Test
+    void testUpdateStudent() {
+        StudentUpdateDTO studentUpdateDTO = new StudentUpdateDTO("Sasa", "Stanisic", 4, 8, 1L, 1L);
+        AccountResponseDTO accountResponseDTO = new AccountResponseDTO("sasa.stanisic.4377@metropolitan.ac.rs", "@Password123$", Role.STUDENT);
+        StudentResponseDTO studentResponseDTO = new StudentResponseDTO(1L, "Sasa", "Stanisic", 4377, 4, 8, accountResponseDTO,
+                new MajorResponseDTO(1L, "SE", "Software engineering", "Software engineering major", 4),
+                new Status(1L, "Traditional"));
+
+        when(studentRepository.findById(1L)).thenReturn(Optional.of(student));
+        when(majorService.getById(studentUpdateDTO.majorId())).thenReturn(major);
+        when(statusService.getStatusById(studentUpdateDTO.statusId())).thenReturn(status);
+        doCallRealMethod().when(studentMapper).updateStudentFromDTO(studentUpdateDTO, student);
+        when(studentRepository.save(student)).thenReturn(student);
+        doReturn(studentResponseDTO).when(studentMapper).toStudentResponseDTO(student);
+
+        var updatedStudentDTO = studentService.updateStudent(1L, studentUpdateDTO);
+
+        assertThat(studentResponseDTO).isEqualTo(updatedStudentDTO);
+    }
+
+    @Test
+    void testDeleteStudent() {
+        when(studentRepository.existsById(1L)).thenReturn(true);
+        doNothing().when(studentRepository).deleteById(1L);
+        Assertions.assertDoesNotThrow(() -> studentService.deleteStudent(1L));
+    }
+
+    @Test
+    void testDeleteStudent_NotFound() {
+        doReturn(false).when(studentRepository).existsById(1L);
+        Assertions.assertThrows(NotFoundException.class, () -> studentService.deleteStudent(1L));
     }
 
 }
