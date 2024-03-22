@@ -4,6 +4,7 @@ import com.smarty.domain.account.entity.Account;
 import com.smarty.domain.account.enums.Role;
 import com.smarty.domain.account.model.AccountRequestDTO;
 import com.smarty.domain.account.model.AccountResponseDTO;
+import com.smarty.domain.account.model.PasswordUpdateDTO;
 import com.smarty.domain.account.service.AccountService;
 import com.smarty.domain.course.domain.Course;
 import com.smarty.domain.course.service.CourseService;
@@ -22,6 +23,7 @@ import com.smarty.infrastructure.exception.exceptions.BadRequestException;
 import com.smarty.infrastructure.exception.exceptions.ConflictException;
 import com.smarty.infrastructure.exception.exceptions.NotFoundException;
 import com.smarty.infrastructure.mapper.StudentMapperImpl;
+import com.smarty.infrastructure.security.service.AuthenticationService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,6 +38,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -74,6 +77,9 @@ public class StudentServiceImplTest {
 
     @Mock
     CourseService courseService;
+
+    @Mock
+    AuthenticationService authenticationService;
 
     @Mock
     EmailNotificationService emailNotificationService;
@@ -319,7 +325,29 @@ public class StudentServiceImplTest {
                 .map(studentMapper::toStudentResponseDTO)
                 .toList();
     }
-    // TODO: averageGradeOfStudent, updatePassword
+
+    @Test
+    void testGetAverageGradeOfStudent() {
+        AccountResponseDTO accountResponseDTO = new AccountResponseDTO("sasa.stanisic.4377@metropolitan.ac.rs", "@Password123$", Role.STUDENT);
+        StudentResponseDTO studentResponseDTO = new StudentResponseDTO(1L, "Sasa", "Stanisic", 4377, 4, 7, accountResponseDTO,
+                new MajorResponseDTO(1L, "SE", "Software engineering", "Software engineering major", 4),
+                new Status(1L, "Traditional"));
+
+        var expectedMap = Map.of(
+                "student", studentResponseDTO,
+                "student's GPA", 9.67
+        );
+
+        when(studentRepository.findById(1L)).thenReturn(Optional.of(student));
+        when(studentRepository.findAverageGradeOfStudent(1L)).thenReturn(9.67);
+        when(studentMapper.toStudentResponseDTO(student)).thenReturn(studentResponseDTO);
+
+        var returnedMap = studentService.getAverageGradeOfStudent(1L);
+
+        Assertions.assertEquals(expectedMap, returnedMap);
+        Assertions.assertTrue(expectedMap.containsKey("student's GPA"));
+        Assertions.assertTrue(returnedMap.containsValue(9.67));
+    }
 
     @Test
     void testUpdateStudent() {
@@ -337,6 +365,25 @@ public class StudentServiceImplTest {
         doReturn(studentResponseDTO).when(studentMapper).toStudentResponseDTO(student);
 
         var updatedStudentDTO = studentService.updateStudent(1L, studentUpdateDTO);
+
+        assertThat(studentResponseDTO).isEqualTo(updatedStudentDTO);
+    }
+
+    @Test
+    void testUpdatePassword() {
+        PasswordUpdateDTO passwordUpdateDTO = new PasswordUpdateDTO("!Password123", "!Password123");
+        AccountResponseDTO accountResponseDTO = new AccountResponseDTO("sasa.stanisic.4377@metropolitan.ac.rs", "!Password123", Role.STUDENT);
+        StudentResponseDTO studentResponseDTO = new StudentResponseDTO(1L, "Sasa", "Stanisic", 4377, 4, 8, accountResponseDTO,
+                new MajorResponseDTO(1L, "SE", "Software engineering", "Software engineering major", 4),
+                new Status(1L, "Traditional"));
+
+        when(studentRepository.findById(1L)).thenReturn(Optional.of(student));
+        when(passwordEncoder.encode(passwordUpdateDTO.password())).thenReturn(accountResponseDTO.password());
+        doNothing().when(authenticationService).canUpdatePassword(student.getAccount().getEmail());
+        when(studentRepository.save(student)).thenReturn(student);
+        doReturn(studentResponseDTO).when(studentMapper).toStudentResponseDTO(student);
+
+        var updatedStudentDTO = studentService.updatePassword(1L, passwordUpdateDTO);
 
         assertThat(studentResponseDTO).isEqualTo(updatedStudentDTO);
     }
